@@ -19,7 +19,7 @@ Android + iOS'ta link ile çalışan web uygulaması.
 1. supabase.com'da proje aç > SQL Editor > `supabase_schema.sql` içeriğini çalıştır (gruplar + örnek görev 6 gelir). Bunu SADECE SEN yaparsın, personel yapmaz.
 2. Project Settings > API'den `URL` + `anon public` key'i al (`service_role`'u kimseyle paylaşma).
 3. `supabase-config.js` dosyasını aç, URL ve anon key'i yaz, GitHub'a yükle.
-4. Bitti: linki açan personel HİÇBİR AYAR GİRMEZ — Grup + Görev No seçip kullanır. Ayarlar'daki URL/key alanları yedek içindir.
+4. Bitti: linki açan personel HİÇBİR AYAR GİRMEZ — sadece Görev No yazar, tablo otomatik dolar. Ayarlar'daki URL/key alanları yedek içindir.
 5. Güvenlik: RLS açık, app SADECE SELECT yapar, yazma kodu yok. Veri girişi Supabase panelinden.
 - Üstte Hat No (23) ve Vardiya (07:30-16:30)
 - Tabloda sarı = sonraki tur, yeşil = aktif tur, soluk = geçen

@@ -101,8 +101,7 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <section id="tab-seferler" class="tab active">
 <div id="banner" class="banner">⚠️ KALKISA HAZIRLAN</div>
 <div class="card" style="display:flex;gap:8px;align-items:end">
-<div style="flex:1"><label style="margin:0 0 4px">Grup</label><select id="selGrup"></select></div>
-<div style="flex:1"><label style="margin:0 0 4px">Görev No</label><select id="selGorev"></select></div>
+<div style="flex:1"><label style="margin:0 0 4px">Görev No</label><input id="inGorev" type="number" inputmode="numeric" min="1" max="299" placeholder="örn 6"></div>
 <button id="yenileBtn" class="ghost" style="flex:0 0 52px">↻</button>
 </div>
 <div class="hint" id="sbDurum" style="margin:0 2px 8px"></div>
@@ -121,7 +120,7 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 </div>
 <div class="tbl">
 <table>
-<thead><tr><th>RUN</th><th>PAR ↓</th><th>BOS ↓</th><th>DNL</th><th>TUR</th></tr></thead>
+<thead><tr><th>DNL</th><th>PAR ↓</th><th>BOS ↓</th><th>TUR</th></tr></thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
@@ -130,7 +129,6 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <section id="tab-tren" class="tab">
 <div class="card"><h3>🚄 TREN / VARDİYA BİLGİSİ</h3>
 <div class="kv"><span>Hat / Araç No</span><b id="bHat">23</b></div>
-<div class="kv"><span>Grup</span><b id="bGrup">-</b></div>
 <div class="kv"><span>Görev No</span><b id="bGorev">-</b></div>
 <div class="kv"><span>Vardiya</span><b id="bVardiya">07:30-16:30</b></div>
 <div class="kv"><span>İlk İstasyon</span><b>PAR (kalkış)</b></div>
@@ -159,19 +157,6 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <div class="btnrow"><button id="bildirimBtn">🔔 Bildirim İzni</button><button id="testBtn" class="ghost">Test</button></div>
 <div class="btnrow"><button id="kaydetBtn">💾 Kaydet</button></div>
 </div>
-<div class="card"><h3>🗄️ SUPABASE (salt-okunur)</h3>
-<label>Project URL<input id="inSbUrl" placeholder="https://xxxx.supabase.co" autocomplete="off"></label>
-<label>Anon Public Key<input id="inSbKey" placeholder="eyJ..." autocomplete="off" style="font-size:12px"></label>
-<div class="btnrow"><button id="sbBaglanBtn">🔗 Bağlan</button><button id="sbKapatBtn" class="ghost">Çevrimdışı</button></div>
-<div class="hint" id="sbAyarDurum"></div>
-<p class="hint">Varsayılan: <b>supabase-config.js</b> dosyasına gömülü bilgi kullanılır — personel hiçbir şey girmez. Buradaki alanlar sadece yedek/özel kurulum içindir. service_role anahtarını ASLA girme.</p>
-</div>
-<div class="card"><h3>📥 SEFER VERİSİ (JSON)</h3>
-<textarea id="veriTxt"></textarea>
-<div class="btnrow"><button id="veriYukleBtn">Uygula</button><button id="veriIndirBtn" class="ghost">İndir</button></div>
-<div class="btnrow"><button id="ornekBtn" class="ghost">↩️ Örnek Veri</button></div>
-<p class="hint">Format: [{"d":28,"k1":"07:33:19","k2":"08:00:04","t":51}, ...]</p>
-</div>
 </section>
 </main>
 <nav class="tabbar">
@@ -192,7 +177,7 @@ const tParse=hms=>{const n=new Date();const[a,b,c]=hms.split(":").map(Number);n.
 function applyTheme(){document.body.setAttribute("data-theme",store.tema);document.querySelector('meta[name="theme-color"]').content=TEMALAR.find(t=>t.id===store.tema)?.c||"#0f172a";
  const w=$("themes");w.innerHTML="";TEMALAR.forEach(t=>{const b=document.createElement("button");b.className="theme"+(t.id===store.tema?" on":"");b.innerHTML=`<span class="dot" style="background:${t.c};border:1px solid #888"></span>${t.ad}`;b.onclick=()=>{store.tema=t.id;persist();applyTheme()};w.appendChild(b)})}
 function persist(){localStorage.setItem("trenStore2",JSON.stringify(store))}
-function initForm(){$("inHat").value=store.hat;$("inVardiya").value=store.vardiya;$("inUyariDk").value=store.uyariDk;$("inSes").checked=store.ses;$("inTitresim").checked=store.titresim;$("veriTxt").value=JSON.stringify(store.veri);$("inSbUrl").value=store.sbUrl||"";$("inSbKey").value=store.sbKey||"";sbDurumYaz()}
+function initForm(){$("inHat").value=store.hat;$("inVardiya").value=store.vardiya;$("inUyariDk").value=store.uyariDk;$("inSes").checked=store.ses;$("inTitresim").checked=store.titresim;sbDurumYaz()}
 function beep(){if(!store.ses)return;try{const C=new (window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(t=>{const o=C.createOscillator(),g=C.createGain();o.connect(g);g.connect(C.destination);o.frequency.value=880;g.gain.value=.25;o.start(C.currentTime+t);o.stop(C.currentTime+t+.22)})}catch(e){} if(store.titresim&&navigator.vibrate)navigator.vibrate([400,150,400,150,600])}
 function notify(t,b){if("Notification" in window&&Notification.permission==="granted"){try{new Notification(t,{body:b})}catch(e){}} if(navigator.serviceWorker?.controller)navigator.serviceWorker.controller.postMessage({title:t,body:b})}
 /* ---- SUPABASE salt-okunur katman ---- */
@@ -214,30 +199,26 @@ function rowsToTurlar(rows){
   o.d=r.dinlenme_dk??o.d??0;o.t=r.tur_suresi_dk??o.t??51;o.run=r.run});
  return [...m.entries()].sort((a,b)=>a[0]-b[0]).map(([run,o])=>({run,d:o.d??0,k1:o.k1,k2:o.k2,t:o.t??51})).filter(x=>x.k1&&x.k2);
 }
-async function sbLoadGroups(){const sb=sbClient();if(!sb)return;const {data,error}=await sb.from("timetable_groups").select("id,ttadi").order("id");if(error)throw error;
- const s=$("selGrup");s.innerHTML="";data.forEach(g=>{const o=document.createElement("option");o.value=g.id;o.textContent=g.ttadi;if(+g.id===+store.grupId)o.selected=true;s.appendChild(o)});
- if(!data.find(g=>+g.id===+store.grupId)&&data[0])store.grupId=data[0].id;
- $("bGrup").textContent=s.selectedOptions[0]?.textContent||"-"}
-async function sbLoadGorevler(){const sb=sbClient();if(!sb)return;const {data,error}=await sb.from("timetable_rows").select("gorevno").eq("ttid",store.grupId);if(error)throw error;
- const uniq=[...new Set((data||[]).map(r=>r.gorevno))].sort();const s=$("selGorev");s.innerHTML="";
- if(!uniq.length){s.innerHTML="<option value=''>—</option>";return}
- uniq.forEach(g=>{const o=document.createElement("option");o.value=g;o.textContent="Görev "+g;if(String(g)===String(store.gorevNo))o.selected=true;s.appendChild(o)});
- if(!uniq.includes(String(store.gorevNo)))store.gorevNo=uniq[0];
- $("bGorev").textContent=store.gorevNo}
-async function sbLoadRows(){const sb=sbClient();if(!sb)return;sbDurumYaz("⏳ Yükleniyor...");
+const GRUP_AD={1:"Hafta İçi",2:"Cumartesi",3:"Pazar"};
+function gorevToGrup(g){g=+g;if(g>=101&&g<=199)return 2;if(g>=201&&g<=299)return 3;return 1}
+async function sbLoadRows(){const sb=sbClient();if(!sb)return;
+ store.grupId=gorevToGrup(store.gorevNo);
+ $("bGorev").textContent=store.gorevNo;
+ sbDurumYaz("⏳ Yükleniyor...");
  const {data,error}=await sb.from("timetable_rows").select("run,yon,saat,dinlenme_dk,tur_suresi_dk").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).order("run").order("yon");
  if(error){sbDurumYaz("🔴 Hata: "+error.message);return}
  const turlar=rowsToTurlar(data||[]);
- if(turlar.length){store.veri=turlar;warned.clear();persist();render();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Grup ${store.grupId} • Görev ${store.gorevNo}`)}
- else sbDurumYaz("⚠️ Bu grup+görevde kayıt yok")}
-async function sbRefresh(){if(!sbActive()||!sbClient()){sbDurumYaz();return}try{await sbLoadGroups();await sbLoadGorevler();await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}}
+ if(turlar.length){store.veri=turlar;warned.clear();persist();render();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Görev ${store.gorevNo}`)}
+ else sbDurumYaz(`⚠️ Görev ${store.gorevNo} için kayıt yok`)}
+async function sbRefresh(){if(!sbActive()||!sbClient()){sbDurumYaz();return}try{await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}}
 function render(){
   $("hatNo").textContent=store.hat;$("vardiyaTxt").textContent=store.vardiya;
   $("bHat").textContent=store.hat;$("bVardiya").textContent=store.vardiya;
   $("bGorev").textContent=store.gorevNo||"-";
-  const _sg=$("selGrup");if(_sg&&_sg.selectedOptions[0])$("bGrup").textContent=_sg.selectedOptions[0].textContent;
+  store.grupId=gorevToGrup(store.gorevNo||1);
+  const _ig=$("inGorev");if(_ig&&document.activeElement!==_ig)_ig.value=store.gorevNo||"";
  const tb=$("tbody");tb.innerHTML="";
-  store.veri.forEach((r,i)=>{const tr=document.createElement("tr");tr.id="s"+i;tr.innerHTML=`<td>${r.run??(i+1)}</td><td>${r.k1.slice(0,5)}</td><td>${r.k2.slice(0,5)}</td><td>${r.d}</td><td>${r.t}'</td>`;tb.appendChild(tr)});
+  store.veri.forEach((r,i)=>{const tr=document.createElement("tr");tr.id="s"+i;tr.innerHTML=`<td>${r.d}</td><td>${r.k1.slice(0,5)}</td><td>${r.k2.slice(0,5)}</td><td>${r.t}'</td>`;tb.appendChild(tr)});
  const top=store.veri.reduce((a,r)=>a+(+r.t||0),0);
  $("mToplam").textContent=top;$("bSure").textContent=top+" dk";$("bToplam").textContent=store.veri.length;
  tick();
@@ -285,18 +266,10 @@ function tick(){
 }
 document.querySelectorAll("nav.tabbar button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav.tabbar button").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));$(b.dataset.tab).classList.add("active");window.scrollTo({top:0})});
 $("kaydetBtn").onclick=()=>{store.hat=$("inHat").value;store.vardiya=$("inVardiya").value;store.uyariDk=+$("inUyariDk").value||5;store.ses=$("inSes").checked;store.titresim=$("inTitresim").checked;persist();render();alert("Kaydedildi ✅")};
-$("ornekBtn").onclick=()=>{store.veri=ORNEK;$("veriTxt").value=JSON.stringify(ORNEK);persist();render()};
-$("veriYukleBtn").onclick=()=>{try{store.veri=JSON.parse($("veriTxt").value);persist();render();alert("Veri uygulandı ✅")}catch(e){alert("JSON hatalı: "+e.message)}};
-$("veriIndirBtn").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([$("veriTxt").value],{type:"application/json"}));a.download="seferler.json";a.click()};
 $("bildirimBtn").onclick=async()=>{try{alert("Bildirim izni: "+await Notification.requestPermission())}catch(e){alert(e.message)}};
 $("testBtn").onclick=()=>{beep();notify("Test","Uyarı sistemi çalışıyor ✅");const bn=$("banner");bn.style.display="block";bn.textContent="⚠️ TEST — sistem çalışıyor ✅";setTimeout(()=>bn.style.display="none",4000)};
-$("sbBaglanBtn").onclick=async()=>{store.sbUrl=$("inSbUrl").value.trim();store.sbKey=$("inSbKey").value.trim();
- if(!store.sbUrl||!store.sbKey){alert("URL ve anon key gerekli");return}
- if(/service_role/i.test(store.sbKey)){alert("⛔ service_role anahtarı YASAK! Sadece anon public key kullan.");return}
- store.sbOn=true;persist();_sb=null;sbDurumYaz("⏳ Bağlanıyor...");try{await sbLoadGroups();await sbLoadGorevler();await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}};
-$("sbKapatBtn").onclick=()=>{store.sbOn=false;persist();sbDurumYaz();alert("Çevrimdışı moda geçildi (örnek/manuel veri)")};
-$("selGrup").onchange=async()=>{store.grupId=+$("selGrup").value;store.gorevNo="";persist();warned.clear();if(sbActive()){try{await sbLoadGorevler();await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}}};
-$("selGorev").onchange=async()=>{store.gorevNo=$("selGorev").value;persist();warned.clear();if(sbActive()){await sbLoadRows()}};
+let _gorevT=null;
+$("inGorev").oninput=()=>{clearTimeout(_gorevT);_gorevT=setTimeout(async()=>{const v=$("inGorev").value.trim();if(!v)return;store.gorevNo=v;persist();warned.clear();store.grupId=gorevToGrup(v);if(sbActive()){await sbLoadRows()}else{render()}},600)};
 $("yenileBtn").onclick=()=>{if(sbActive())sbRefresh();else{render();alert("Çevrimdışı veri kullanılıyor")}};
 applyTheme();initForm();render();setInterval(tick,1000);sbRefresh();setInterval(()=>{if(sbActive())sbLoadRows().catch(()=>{})},5*60*1000);
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
