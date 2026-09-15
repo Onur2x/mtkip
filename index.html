@@ -144,12 +144,12 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <div class="mini">
 <div><b id="mTur">-</b><span>TUR</span></div>
 <div><b id="mKalan">-</b><span>KALAN</span></div>
-<div><b id="mTamam">-</b><span>TAMAM</span></div>
+<div><b id="mTamam">-</b><span>TAMAMLANAN</span></div>
 <div><b id="mToplam">-</b><span>TOPLAM dk</span></div>
 </div>
 <div class="tbl">
 <table>
-<thead><tr><th>DNL</th><th>PAR ↓</th><th>BOS ↓</th><th>TUR</th></tr></thead>
+<thead><tr><th>DİNLENME</th><th>PARSELER ↓</th><th>BOSTANCI ↓</th><th>TUR SÜRESİ</th></tr></thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
@@ -220,6 +220,17 @@ let store=JSON.parse(localStorage.getItem("trenStore2")||"null")||{uyariDk:5,ses
 let warned=new Set();
 const $=id=>document.getElementById(id);
 const tParse=hms=>{const n=new Date();const[a,b,c]=hms.split(":").map(Number);n.setHours(a,b||0,c||0,0);return n};
+// dinlenme: önce ileri (sonraki PAR − (BOS + seyahat)), yoksa geri (PAR − (önceki BOS + önceki seyahat))
+function dinlenmeler(v){
+ const fwd=(k1,k2,nk1)=>{if(k2<k1)k2+=86400000;if(nk1<=k2)nk1+=86400000;return Math.max(0,Math.ceil((nk1-(k2+(k2-k1)))/60000))};
+ return v.map((r,i)=>{
+  const nx=v[i+1],pv=v[i-1];
+  if(r.k1&&r.k2&&nx&&nx.k1)return fwd(tParse(r.k1).getTime(),tParse(r.k2).getTime(),tParse(nx.k1).getTime());
+  if(r.k1&&pv&&pv.k1&&pv.k2)return fwd(tParse(pv.k1).getTime(),tParse(pv.k2).getTime(),tParse(r.k1).getTime());
+  if(i===0)return 0;
+  return "–";
+ });
+}
 let alarmAktif=false,alarmTimer=null,alarmKey=null;
 function alarmBaslat(key,det){
  if(alarmAktif&&alarmKey===key){$("alarmDet").textContent=det;return}
@@ -253,15 +264,21 @@ async function girisYap(){
 $("girisBtn").onclick=girisYap;
 $("cevrimdisiBtn").onclick=()=>{const s=$("inSicil").value.trim();if(!s){loginHata("Önce sicil yaz");return}store.personel={sicil:s,ad:"(çevrimdışı)"};persist();$("loginModal").classList.remove("acik")};
 function bugun(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function gecmisEkle(){try{store.gecmis=store.gecmis||[];const g={tarih:bugun(),gorevno:String(store.gorevNo)};const last=store.gecmis[0];if(!last||last.tarih!==g.tarih||last.gorevno!==g.gorevno){store.gecmis.unshift(g);store.gecmis=store.gecmis.slice(0,30);persist()}}catch(e){}}
+function gecmisEkle(){try{store.gecmis=store.gecmis||[];
+ // eski çift kayıtları temizle (tarih başına 1)
+ const seen=new Set();store.gecmis=store.gecmis.filter(x=>{if(seen.has(x.tarih))return false;seen.add(x.tarih);return true});
+ const t=bugun(),g=String(store.gorevNo),ex=store.gecmis.findIndex(x=>x.tarih===t);
+ if(ex>=0){const[e]=store.gecmis.splice(ex,1);e.gorevno=g;store.gecmis.unshift(e)}
+ else{store.gecmis.unshift({tarih:t,gorevno:g});store.gecmis=store.gecmis.slice(0,30)}
+ persist()}catch(e){}}
 let _lastLog="";
 async function logGorev(){
  try{
   const sb=sbClient();if(!sb||!store.personel||!store.personel.sicil||!store.gorevNo)return;
   const d=new Date(),today=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-  const k=store.personel.sicil+"|"+today+"|"+store.gorevNo;
+  const k=store.personel.sicil+"|"+today;
   if(k===_lastLog)return;_lastLog=k;
-  await sb.from("gorev_log").insert({sicil:store.personel.sicil,gorevno:String(store.gorevNo),ttid:store.grupId,tarih:today});
+  await sb.from("gorev_log").upsert({sicil:store.personel.sicil,gorevno:String(store.gorevNo),ttid:store.grupId,tarih:today},{onConflict:"sicil,tarih"});
  }catch(e){}
 }
 function applyTheme(){document.body.setAttribute("data-theme",store.tema);document.querySelector('meta[name="theme-color"]').content=TEMALAR.find(t=>t.id===store.tema)?.c||"#0f172a";
@@ -315,13 +332,16 @@ function sbActive(){const c=sbCreds();if(!c)return false;if(c.from==="gomulu")re
 function sbClient(){const c=sbCreds();if(!c)return null;try{if(!_sb||_sb._url!==c.url||_sb._key!==c.key)_sb=createClient(c.url,c.key);return _sb}catch(e){return null}}
 function sbDurumYaz(msg){const a=$("sbDurum"),b=$("sbAyarDurum");const txt=msg||(sbActive()?"🟢 Supabase bağlı (salt-okunur)":"⚪ Çevrimdışı / örnek veri");if(a)a.textContent=txt;if(b)b.textContent=txt}
 function rowsToTurlar(rows){
- // aynı (run) içindeki yon 0 (PAR) ve yon 1 (BOS) eşleştir
+ // aynı (run) içindeki yon 0 (PAR) ve yon 1 (BOS) eşleştir; tek yönlü turlar korunur
  const m=new Map();
  rows.forEach(r=>{if(!m.has(r.run))m.set(r.run,{});const o=m.get(r.run);
   if(r.yon===0){o.k1=r.saat.slice(0,8);o.d=r.dinlenme_dk??o.d??0}
   else{o.k2=r.saat.slice(0,8);o.t=r.tur_suresi_dk??o.t??51}
   o.d=r.dinlenme_dk??o.d??0;o.t=r.tur_suresi_dk??o.t??51;o.run=r.run});
- return [...m.entries()].sort((a,b)=>a[0]-b[0]).map(([run,o])=>({run,d:o.d??0,k1:o.k1,k2:o.k2,t:o.t??51})).filter(x=>x.k1&&x.k2);
+ const tkey=o=>{const t=o.k1||o.k2;const[a,b,c]=t.split(":").map(Number);let s=a*3600+b*60+(c||0);if(!o.k1&&s<3*3600)s+=86400;return s};
+ return [...m.values()].map(o=>({run:o.run,d:o.d??0,k1:o.k1||null,k2:o.k2||null,t:o.t??51}))
+  .filter(x=>x.k1||x.k2)
+  .sort((a,b)=>tkey(a)-tkey(b));
 }
 const GRUP_AD={1:"Hafta İçi",2:"Cumartesi",3:"Pazar"};
 function gorevToGrup(g){g=+g;if(g>=101&&g<=199)return 2;if(g>=201&&g<=299)return 3;return 1}
@@ -343,7 +363,10 @@ function render(){
   store.grupId=gorevToGrup(store.gorevNo||1);
   const _ig=$("inGorev");if(_ig&&document.activeElement!==_ig)_ig.value=store.gorevNo||"";
  const tb=$("tbody");tb.innerHTML="";
-  store.veri.forEach((r,i)=>{const tr=document.createElement("tr");tr.id="s"+i;tr.innerHTML=`<td>${r.d}</td><td>${r.k1.slice(0,5)}</td><td>${r.k2.slice(0,5)}</td><td>${r.t}'</td>`;tb.appendChild(tr)});
+ // güvenlik: PAR saati BOS'tan geç ise (yon ters girilmiş veri) otomatik düzelt (gece yarısı hariç)
+ store.veri.forEach(r=>{if(r.k1&&r.k2&&r.k1>r.k2&&+String(r.k2).slice(0,2)>=3){const t=r.k1;r.k1=r.k2;r.k2=t}});
+ const dler=dinlenmeler(store.veri);
+ store.veri.forEach((r,i)=>{r.d=dler[i];const tr=document.createElement("tr");tr.id="s"+i;const k1=r.k1?r.k1.slice(0,5):"—",k2=r.k2?r.k2.slice(0,5):"—";tr.innerHTML=`<td>${r.d}</td><td>${k1}</td><td>${k2}</td><td>${r.t}'</td>`;tb.appendChild(tr)});
  const top=store.veri.reduce((a,r)=>a+(+r.t||0),0);
  $("mToplam").textContent=top;$("bSure").textContent=top+" dk";$("bToplam").textContent=store.veri.length;
  tick();
@@ -352,14 +375,17 @@ function tick(){
  const now=new Date();
  $("canliSaat").textContent=now.toLocaleTimeString("tr-TR");
  $("tarihTxt").textContent=now.toLocaleDateString("tr-TR",{day:"numeric",month:"short",weekday:"short"});
- // tamamlanan: son kalkış geçmişse
- let tamam=0;store.veri.forEach(r=>{if(now>tParse(r.k2))tamam++});
- // SADECE ilk istasyon (k1) bazlı sonraki kalkış
- let next=null;store.veri.forEach((r,i)=>{const t=tParse(r.k1);if(t>now&&(!next||t<next.t))next={t,i,r}});
- document.querySelectorAll("#tbody tr").forEach(tr=>tr.classList.remove("row-next","row-now","row-done"));
- store.veri.forEach((r,i)=>{const tr=$("s"+i);if(!tr)return;const t1=tParse(r.k1),t2=tParse(r.k2);
-  if(now>t2)tr.classList.add("row-done");else if(now>=t1&&now<=t2)tr.classList.add("row-now")});
-  const aktif0=store.veri.findIndex(r=>now>=tParse(r.k1)&&now<=tParse(r.k2));
+  // tamamlanan: BOS geçtiyse (tek yön PAR ise PAR geçtiyse)
+  let tamam=0;store.veri.forEach(r=>{if(r.k2){if(now>tParse(r.k2))tamam++}else if(r.k1&&now>tParse(r.k1))tamam++});
+  // SADECE ilk istasyon (k1) bazlı sonraki kalkış
+  let next=null;store.veri.forEach((r,i)=>{if(!r.k1)return;const t=tParse(r.k1);if(t>now&&(!next||t<next.t))next={t,i,r}});
+  document.querySelectorAll("#tbody tr").forEach(tr=>tr.classList.remove("row-next","row-now","row-done"));
+  store.veri.forEach((r,i)=>{const tr=$("s"+i);if(!tr)return;
+   if(r.k1&&r.k2){const t1=tParse(r.k1),t2=tParse(r.k2);
+    if(now>t2)tr.classList.add("row-done");else if(now>=t1&&now<=t2)tr.classList.add("row-now")}
+   else if(r.k2&&now>tParse(r.k2))tr.classList.add("row-done");
+   else if(r.k1&&now>tParse(r.k1))tr.classList.add("row-done")});
+   const aktif0=store.veri.findIndex(r=>r.k1&&r.k2&&now>=tParse(r.k1)&&now<=tParse(r.k2));
   if(next){
    // Moladaysa sıradaki tur komple yeşil (row-now), seferdeyse sıradaki outline (row-next)
    $("s"+next.i)?.classList.add(aktif0>=0?"row-next":"row-now");
@@ -376,11 +402,11 @@ function tick(){
   if(dk<=5){bar.style.background="linear-gradient(90deg,#ef4444,#f87171)";wrap.classList.add("kritik")}
   else if(dk<=15){bar.style.background="linear-gradient(90deg,#f59e0b,#fb923c)";wrap.classList.remove("kritik")}
   else{bar.style.background="linear-gradient(90deg,var(--accent),#4ade80)";wrap.classList.remove("kritik")}
-  const kalanTur=store.veri.filter(r=>tParse(r.k1)>now).length;
+  const kalanTur=store.veri.filter(r=>r.k1&&tParse(r.k1)>now).length;
   $("mTur").textContent=(next.i+1)+"/"+store.veri.length;$("mKalan").textContent=kalanTur;$("mTamam").textContent=tamam;
   $("bKalan").textContent=kalanTur;$("bTamam").textContent=tamam;$("bSonraki").textContent=next.r.k1;
   // seferde mi molada mı
-  const aktif=store.veri.findIndex(r=>now>=tParse(r.k1)&&now<=tParse(r.k2));
+  const aktif=store.veri.findIndex(r=>r.k1&&r.k2&&now>=tParse(r.k1)&&now<=tParse(r.k2));
   $("bDurum").textContent=aktif>=0?`🚄 Seferde (${aktif+1}. tur)`:`☕ Hazırlık / Mola`;
   const key=next.i+"_"+next.r.k1;
   if(dk<=store.uyariDk&&dk>0&&!warned.has(key)){

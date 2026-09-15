@@ -28,7 +28,9 @@ th{background:#1e293b;color:#93a3b8}
 <div class="wrap">
 <h1>🔒 Admin İçe Aktarma <span style="font-size:12px;color:#93a3b8">(personelle paylaşılmaz)</span></h1>
 <p class="hint">Excel'den kopyala → aşağıya yapıştır → <b>SQL Üret</b> → çıkan SQL'i Supabase &gt; SQL Editor'de çalıştır.<br>
-Eşleşme: aynı görevin PAR ve BOS saatleri sıralanıp 1-1, 2-2 eşleşir. Gece yarısı (00:xx) varışlar en sona alınır. Tur süresi 51 dk sabit, dinlenme = önceki BOS → sonraki PAR farkı (dk).</p>
+Eşleşme: her PAR'a kendinden sonraki ilk BOS verilir (en fazla 3 saat içinde). Eşleşmeyen PAR/BOS uyarı olarak listelenir. Gece yarısı (00:xx) saatler en sona alınır. Tur süresi 51 dk sabit.<br>
+Dinlenme formülü: <b>sonraki PAR − (BOS + (BOS − PAR))</b> → yukarı yuvarlanır. Örn: PAR 07:29, BOS 07:56, sonraki 08:45 → 08:45 − (07:56+27) = 22 dk. Son turun dinlenmesi 0 yazılır.<br>
+<b>Dikkat:</b> SQL önce o günün tüm satırlarını silip yeniler — günü <b>tam</b> yapıştır, parça yapıştırma.</p>
 
 <div class="card">
 <label>Gün</label>
@@ -73,29 +75,51 @@ $("uretBtn").onclick=()=>{
  const parM=new Map(),bosM=new Map();
  P.out.forEach(r=>{if(!parM.has(r.gorev))parM.set(r.gorev,[]);parM.get(r.gorev).push(r.saat)});
  B.out.forEach(r=>{if(!bosM.has(r.gorev))bosM.set(r.gorev,[]);bosM.get(r.gorev).push(r.saat)});
- [...parM.values()].forEach(a=>a.sort());[...bosM.values()].forEach(a=>a.sort((x,y)=>sn(x)-sn(y)));
- const gorevler=[...new Set([...parM.keys(),...bosM.keys()])].sort((a,b)=>a-b);
- let html="",warn=[],vals=[],toplam=0;
- html+=`<table><thead><tr><th>Görev</th><th>Run</th><th>PAR</th><th>BOS</th><th>Seyahat</th><th>Dinlenme</th></tr></thead><tbody>`;
- gorevler.forEach(g=>{
-  const P0=parM.get(g)||[],B0=bosM.get(g)||[];
-  if(P0.length!==B0.length)warn.push(`Görev ${g}: PAR ${P0.length} adet, BOS ${B0.length} adet — ${Math.min(P0.length,B0.length)} tur alındı`);
-  const n=Math.min(P0.length,B0.length);
-  for(let i=0;i<n;i++){
-   const k1=P0[i],k2=B0[i];
-   let sey=Math.round((sn(k2)-sn(k1))/60);if(sey<0)sey+=1440;
-   let din=i===0?0:Math.round((sn(k1)-sn(B0[i-1]))/60);if(din<0)din+=1440;
+ [...parM.values()].forEach(a=>a.sort((x,y)=>sn(x)-sn(y)));[...bosM.values()].forEach(a=>a.sort((x,y)=>sn(x)-sn(y)));
+  const gorevler=[...new Set([...parM.keys(),...bosM.keys()])].sort((a,b)=>a-b);
+  let html="",warn=[],vals=[],toplam=0;
+  html+=`<table><thead><tr><th>Görev</th><th>Run</th><th>PAR</th><th>BOS</th><th>Seyahat</th><th>Dinlenme</th></tr></thead><tbody>`;
+  gorevler.forEach(g=>{
+  // akıllı eşleşme: her PAR'a kendinden sonraki ilk BOS (en fazla 3 saat içinde)
+  const P0=[...(parM.get(g)||[])].sort((x,y)=>sn(x)-sn(y));
+  let B0=[...(bosM.get(g)||[])].sort((x,y)=>sn(x)-sn(y));
+  const pairs=[];
+  const parSolo=[];
+  P0.forEach(k1=>{
+   const idx=B0.findIndex(k2=>sn(k2)>=sn(k1)&&(sn(k2)-sn(k1))<=10800);
+   if(idx>=0){pairs.push([k1,B0[idx]]);B0.splice(idx,1)}
+   else{warn.push(`Görev ${g}: PAR ${k1} tek yönlü alındı`);parSolo.push(k1)}
+  });
+  B0.forEach(k2=>warn.push(`Görev ${g}: BOS ${k2} tek yönlü alındı`));
+  pairs.forEach(([k1,k2],i)=>{
+   const n=pairs.length;
+   let sey=Math.round((sn(k2)-sn(k1))/60);
+   const travel=sn(k2)-sn(k1);
+   let din=0;
+   if(i<n-1){din=Math.ceil((sn(pairs[i+1][0])-(sn(k2)+travel))/60);
+    if(din<0)warn.push(`Görev ${g} run ${i+1}: dinlenme negatif (${din} dk) — saatleri kontrol et`);}
+   else if(i>0){const[pk1,pk2]=pairs[i-1];din=Math.ceil((sn(k1)-(sn(pk2)+(sn(pk2)-sn(pk1))))/60);
+    if(din<0)warn.push(`Görev ${g} run ${i+1}: dinlenme negatif (${din} dk) — saatleri kontrol et`);}
    if(sey<5||sey>90)warn.push(`Görev ${g} run ${i+1}: seyahat ${sey} dk — kontrol et (${k1} → ${k2})`);
    html+=`<tr><td>${g}</td><td>${i+1}</td><td>${k1}</td><td>${k2}</td><td>${sey}'</td><td>${din}'</td></tr>`;
    vals.push(`(${ttid},'${g}',${i+1},0,'${k1}',${din},51)`,`(${ttid},'${g}',${i+1},1,'${k2}',${din},51)`);
    toplam++;
-  }
+  });
+  // tek yönlüler: çift kayıt çakışmasın diye 500+ run
+  parSolo.forEach((k1,j)=>{
+   html+=`<tr><td>${g}</td><td>tek</td><td>${k1}</td><td>—</td><td>—</td><td>–</td></tr>`;
+   vals.push(`(${ttid},'${g}',${500+j},0,'${k1}',0,51)`);toplam++;
+  });
+  B0.forEach((k2,j)=>{
+   html+=`<tr><td>${g}</td><td>tek</td><td>—</td><td>${k2}</td><td>—</td><td>–</td></tr>`;
+   vals.push(`(${ttid},'${g}',${600+j},1,'${k2}',0,51)`);toplam++;
+  });
  });
  html+=`</tbody></table>`;
  if(P.bad.length)warn.push("PAR'da okunamayan satırlar: "+P.bad.join(","));
  if(B.bad.length)warn.push("BOS'ta okunamayan satırlar: "+B.bad.join(","));
  $("sonuc").innerHTML=(toplam?`<div class="ok">✅ ${toplam} tur (${vals.length} satır) hazır</div>`:`<div class="warn">⚠️ Veri yok</div>`)+warn.map(w=>`<div class="warn">⚠️ ${w}</div>`).join("")+html;
- const sql=`-- ${$("gun").selectedOptions[0].textContent} — ${toplam} tur\ninsert into public.timetable_rows (ttid,gorevno,run,yon,saat,dinlenme_dk,tur_suresi_dk) values\n`+vals.join(",\n")+`\non conflict (ttid,gorevno,run,yon) do update set saat=excluded.saat, dinlenme_dk=excluded.dinlenme_dk, tur_suresi_dk=excluded.tur_suresi_dk;`;
+ const sql=`-- ${$("gun").selectedOptions[0].textContent} — ${toplam} tur\ndelete from public.timetable_rows where ttid = ${ttid};\ninsert into public.timetable_rows (ttid,gorevno,run,yon,saat,dinlenme_dk,tur_suresi_dk) values\n`+vals.join(",\n")+`\non conflict (ttid,gorevno,run,yon) do update set saat=excluded.saat, dinlenme_dk=excluded.dinlenme_dk, tur_suresi_dk=excluded.tur_suresi_dk;`;
  $("sqlTxt").value=vals.length?sql:"";
 };
 $("kopyalaBtn").onclick=()=>{$("sqlTxt").select();document.execCommand("copy");alert("Kopyalandı")};
