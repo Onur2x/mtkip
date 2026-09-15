@@ -10,7 +10,8 @@
 h1{font-size:18px}h2{font-size:15px;color:#93a3b8;margin:18px 0 6px}
 .card{background:#16233f;border:1px solid #334155;border-radius:16px;padding:14px;margin:10px 0}
 label{font-size:13px;color:#93a3b8;display:block;margin:8px 0 4px}
-select,textarea,button{font-size:14px;padding:11px;border-radius:12px;border:1px solid #475569}
+select,textarea,button,input{font-size:14px;padding:11px;border-radius:12px;border:1px solid #475569}
+input{width:100%;background:#0f172a;color:#e2e8f0;margin-bottom:6px}
 select{background:#fff;color:#111}
 textarea{width:100%;min-height:130px;font-family:Consolas,monospace;font-size:12px;background:#0f172a;color:#e2e8f0}
 button{background:#22c55e;color:#052e16;font-weight:800;border:none;cursor:pointer;margin:6px 6px 0 0}
@@ -99,6 +100,58 @@ $("uretBtn").onclick=()=>{
 };
 $("kopyalaBtn").onclick=()=>{$("sqlTxt").select();document.execCommand("copy");alert("Kopyalandı")};
 $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([$("sqlTxt").value],{type:"text/sql"}));a.download=`seed_gun${g}.sql`;a.click()};
+</script>
+<div class="card">
+<h2>👥 Personel Ekle (manuel)</h2>
+<div id="admLogin">
+<label>E-posta (Supabase admin kullanıcın)</label><input id="admMail" autocomplete="off" placeholder="ornek@mail.com">
+<label>Şifre</label><input id="admPass" type="password" placeholder="••••••">
+<div><button id="admLoginBtn">🔑 Admin Girişi</button></div>
+<div class="hint" id="admDurum"></div>
+<p class="hint">Önce Supabase &gt; Authentication &gt; Users'tan kendine kullanıcı açmış olmalısın. Bu giriş olmadan ekleme/silme çalışmaz.</p>
+</div>
+<div id="admPanel" style="display:none">
+<label>Sicil</label><input id="pSicil" inputmode="numeric" autocomplete="off" placeholder="örn 5771">
+<label>Ad Soyad</label><input id="pAd" autocomplete="off" placeholder="Ad SOYAD">
+<div><button id="pEkleBtn">➕ Ekle / Güncelle</button><button id="pYenileBtn" class="ghost">↻ Listele</button></div>
+<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Ad</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="pListe"></tbody></table>
+</div>
+</div>
+<script src="supabase-config.js"></script>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const cfg=window.__SB__||{};
+const sb=createClient(cfg.URL,cfg.ANON_KEY);
+const $=id=>document.getElementById(id);
+$("admLoginBtn").onclick=async()=>{
+ const {error}=await sb.auth.signInWithPassword({email:$("admMail").value.trim(),password:$("admPass").value});
+ if(error){$("admDurum").textContent="🔴 "+error.message;return}
+ $("admDurum").textContent="🟢 Giriş yapıldı";
+ $("admLogin").style.display="none";$("admPanel").style.display="block";
+ liste();
+};
+async function liste(){
+ const {data,error}=await sb.from("personel").select("sicil,ad,aktif").order("sicil");
+ if(error){alert(error.message);return}
+ $("pListe").innerHTML=(data||[]).map(p=>`<tr><td>${p.sicil}</td><td style="text-align:left">${p.ad}</td><td>${p.aktif?"✅":"⛔"}</td><td><button class="ghost" onclick="tgl('${p.sicil}',${!p.aktif})">${p.aktif?"Pasif":"Aktif"}</button> <button class="ghost" onclick="sil('${p.sicil}')">Sil</button></td></tr>`).join("");
+}
+$("pYenileBtn").onclick=liste;
+$("pEkleBtn").onclick=async()=>{
+ const sicil=$("pSicil").value.trim(),ad=$("pAd").value.trim();
+ if(!sicil||!ad){alert("Sicil ve ad gerekli");return}
+ const {error}=await sb.from("personel").upsert({sicil,ad,aktif:true},{onConflict:"sicil"});
+ if(error){alert("🔴 "+error.message);return}
+ $("pSicil").value="";$("pAd").value="";liste();
+};
+window.tgl=async(sicil,aktif)=>{
+ const {error}=await sb.from("personel").update({aktif}).eq("sicil",sicil);
+ if(error)alert(error.message);else liste();
+};
+window.sil=async sicil=>{
+ if(!confirm(sicil+" silinsin mi?"))return;
+ const {error}=await sb.from("personel").delete().eq("sicil",sicil);
+ if(error)alert(error.message);else liste();
+};
 </script>
 </body>
 </html>

@@ -106,6 +106,14 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 .alarm-title{font-size:26px;font-weight:900;color:#fff;margin:8px 0}
 .alarm-det{font-size:16px;font-weight:700;color:#fecaca;margin-bottom:18px;font-variant-numeric:tabular-nums}
 #susturBtn{background:#fff;color:#7f1d1d;font-size:22px;padding:18px;width:100%}
+.login-modal{display:none;position:fixed;inset:0;z-index:200;background:linear-gradient(180deg,var(--bg2),var(--bg));place-items:center;padding:20px}
+.login-modal.acik{display:grid}
+.login-box{width:100%;max-width:340px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:28px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.login-box .logo{width:64px;height:64px;font-size:36px;margin:0 auto 10px}
+.login-box h2{margin:0 0 4px;font-size:22px}
+.login-box p{font-size:13px;color:var(--muted);margin:0 0 14px}
+.login-box input{text-align:center;font-size:22px;font-weight:800;letter-spacing:2px;margin-bottom:10px}
+.login-err{display:none;color:#f87171;font-size:13px;font-weight:700;margin:6px 0}
 </style>
 </head>
 <body>
@@ -126,6 +134,7 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <button id="yenileBtn" class="ghost" style="flex:0 0 52px">↻</button>
 </div>
 <div class="hint" id="sbDurum" style="margin:0 2px 8px"></div>
+<div class="hint" id="kullaniciTxt" style="margin:0 2px 8px"></div>
 <div class="count-card">
 <div class="gorev-buyuk">GÖREV <span id="gorevBuyuk">-</span></div>
 <div class="next-time">🚏 PAR <span id="sonrakiTxt">-</span> • <span id="turNo">-</span>. tur</div>
@@ -161,6 +170,7 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <div class="kv"><span>Çalışma oranı</span><b id="bOran">%57</b></div>
 <div class="kv"><span>Sonraki ilk kalkış</span><b id="bSonraki">-</b></div>
 </div>
+<div class="card"><h3>🕘 GEÇMİŞ GÖREVLERİM</h3><div id="gecmisListe"></div></div>
 <p class="hint">Soldaki saatler ilk kalkış istasyonu (PAR), sağdaki saatler son istasyon (BOS) kalkışlarıdır. Soldaki sayı dinlenme, sağdaki sayı tur süresidir — detay açıklaması sonra eklenecek.</p>
 </section>
 <!-- AYARLAR -->
@@ -171,10 +181,22 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <div class="switch"><input type="checkbox" id="inSes" checked> 🔊 Sesli uyarı</div>
 <div class="switch"><input type="checkbox" id="inTitresim" checked> 📳 Titreşim</div>
 <div class="btnrow"><button id="bildirimBtn">🔔 Bildirim İzni</button><button id="testBtn" class="ghost">Test</button></div>
-<div class="btnrow"><button id="kaydetBtn">💾 Kaydet</button></div>
+<div class="btnrow"><button id="kaydetBtn">💾 Kaydet</button><button id="cikisBtn" class="ghost">🚪 Çıkış</button></div>
 </div>
 </section>
 </main>
+<div id="loginModal" class="login-modal">
+<div class="login-box">
+<div class="logo">🚂</div>
+<h2>M8 Personel Girişi</h2>
+<p>Sicil numaranı gir (şifre = sicil numaran)</p>
+<input id="inSicil" inputmode="numeric" autocomplete="off" placeholder="Sicil">
+<input id="inSifre" type="password" inputmode="numeric" autocomplete="off" placeholder="Şifre">
+<div class="login-err" id="loginErr"></div>
+<div class="btnrow"><button id="girisBtn">🔑 Giriş</button></div>
+<div class="btnrow"><button id="cevrimdisiBtn" class="ghost">Çevrimdışı Gir</button></div>
+</div>
+</div>
 <div id="alarmModal" class="alarm-modal">
 <div class="alarm-box">
 <div class="alarm-ico">🚂</div>
@@ -194,7 +216,7 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const ORNEK=[{d:28,k1:"07:33:19",k2:"08:00:04",t:51,run:1},{d:49,k1:"08:54:46",k2:"09:21:31",t:51,run:2},{d:49,k1:"10:36:36",k2:"11:03:21",t:51,run:3},{d:49,k1:"12:18:26",k2:"12:45:11",t:51,run:4},{d:59,k1:"14:10:27",k2:"14:37:12",t:51,run:5},{d:18,k1:"15:21:44",k2:"15:48:29",t:51,run:6}];
 const TEMALAR=[{id:"gece",ad:"🌙 Gece",c:"#0b1220"},{id:"gunduz",ad:"☀️ Gündüz",c:"#f1f5f9"},{id:"orman",ad:"🌲 Orman",c:"#065f46"},{id:"okyanus",ad:"🌊 Okyanus",c:"#0c4a6e"},{id:"gunbatimi",ad:"🌅 Günbatımı",c:"#6d28d9"},{id:"bordo",ad:"🍷 Bordo",c:"#991b1b"},{id:"seker",ad:"🍬 Şeker",c:"#fce7f3"},{id:"kiraz",ad:"🌸 Kiraz",c:"#9d174d"},{id:"lila",ad:"💜 Lila",c:"#ede9fe"},{id:"uzum",ad:"🍇 Üzüm",c:"#5b21b6"},{id:"buz",ad:"🧊 Buz",c:"#e0f2fe"},{id:"fume",ad:"🌫️ Füme",c:"#27272a"},{id:"karamel",ad:"☕ Karamel",c:"#6b4c22"},{id:"zeytin",ad:"🫒 Zeytin",c:"#3f6212"}];
-let store=JSON.parse(localStorage.getItem("trenStore2")||"null")||{hat:"23",vardiya:"07:30-16:30",uyariDk:5,ses:true,titresim:true,tema:"gece",veri:ORNEK,sbUrl:"",sbKey:"",grupId:1,gorevNo:"6",sbOn:false};
+let store=JSON.parse(localStorage.getItem("trenStore2")||"null")||{uyariDk:5,ses:true,titresim:true,tema:"gece",veri:[],sbUrl:"",sbKey:"",grupId:1,gorevNo:"",sbOn:true,personel:null};
 let warned=new Set();
 const $=id=>document.getElementById(id);
 const tParse=hms=>{const n=new Date();const[a,b,c]=hms.split(":").map(Number);n.setHours(a,b||0,c||0,0);return n};
@@ -211,6 +233,37 @@ function alarmDurdur(){
  if(alarmKey)warned.add(alarmKey);
 }
 $("susturBtn").onclick=alarmDurdur;
+/* ---- PERSONEL GİRİŞİ + GÜNLÜK KAYIT ---- */
+function loginHata(m){const e=$("loginErr");e.style.display="block";e.textContent=m}
+async function girisYap(){
+ const sicil=$("inSicil").value.trim(),sifre=$("inSifre").value.trim();
+ if(!sicil||!sifre){loginHata("Sicil ve şifre gerekli");return}
+ if(sifre!==sicil){loginHata("Şifre sicil numaran olmalı");return}
+ const sb=sbClient();
+ if(!sb){loginHata("Bağlantı yok — Çevrimdışı Gir'i kullan");return}
+ loginHata("");$("girisBtn").textContent="⏳ ...";
+ try{
+  const {data,error}=await sb.from("personel").select("ad,aktif").eq("sicil",sicil).maybeSingle();
+  if(error||!data){loginHata("Sicil bulunamadı");return}
+  if(data.aktif===false){loginHata("Hesap pasif");return}
+  store.personel={sicil,ad:data.ad};persist();
+  $("loginModal").classList.remove("acik");
+ }finally{$("girisBtn").textContent="🔑 Giriş"}
+}
+$("girisBtn").onclick=girisYap;
+$("cevrimdisiBtn").onclick=()=>{const s=$("inSicil").value.trim();if(!s){loginHata("Önce sicil yaz");return}store.personel={sicil:s,ad:"(çevrimdışı)"};persist();$("loginModal").classList.remove("acik")};
+function bugun(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function gecmisEkle(){try{store.gecmis=store.gecmis||[];const g={tarih:bugun(),gorevno:String(store.gorevNo)};const last=store.gecmis[0];if(!last||last.tarih!==g.tarih||last.gorevno!==g.gorevno){store.gecmis.unshift(g);store.gecmis=store.gecmis.slice(0,30);persist()}}catch(e){}}
+let _lastLog="";
+async function logGorev(){
+ try{
+  const sb=sbClient();if(!sb||!store.personel||!store.personel.sicil||!store.gorevNo)return;
+  const d=new Date(),today=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const k=store.personel.sicil+"|"+today+"|"+store.gorevNo;
+  if(k===_lastLog)return;_lastLog=k;
+  await sb.from("gorev_log").insert({sicil:store.personel.sicil,gorevno:String(store.gorevNo),ttid:store.grupId,tarih:today});
+ }catch(e){}
+}
 function applyTheme(){document.body.setAttribute("data-theme",store.tema);document.querySelector('meta[name="theme-color"]').content=TEMALAR.find(t=>t.id===store.tema)?.c||"#0f172a";
  const w=$("themes");w.innerHTML="";TEMALAR.forEach(t=>{const b=document.createElement("button");b.className="theme"+(t.id===store.tema?" on":"");b.innerHTML=`<span class="dot" style="background:${t.c};border:1px solid #888"></span>${t.ad}`;b.onclick=()=>{store.tema=t.id;persist();applyTheme()};w.appendChild(b)})}
 function persist(){localStorage.setItem("trenStore2",JSON.stringify(store))}
@@ -279,12 +332,14 @@ async function sbLoadRows(){const sb=sbClient();if(!sb)return;
  const {data,error}=await sb.from("timetable_rows").select("run,yon,saat,dinlenme_dk,tur_suresi_dk").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).order("run").order("yon");
  if(error){sbDurumYaz("🔴 Hata: "+error.message);return}
  const turlar=rowsToTurlar(data||[]);
- if(turlar.length){store.veri=turlar;warned.clear();persist();render();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Görev ${store.gorevNo}`)}
+  if(turlar.length){store.veri=turlar;warned.clear();persist();render();gecmisEkle();logGorev();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Görev ${store.gorevNo}`)}
  else sbDurumYaz(`⚠️ Görev ${store.gorevNo} için kayıt yok`)}
 async function sbRefresh(){if(!sbActive()||!sbClient()){sbDurumYaz();return}try{await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}}
 function render(){
   $("bGorev").textContent=store.gorevNo||"-";
   $("gorevBuyuk").textContent=store.gorevNo||"-";
+  $("kullaniciTxt").textContent=store.personel?("👤 "+store.personel.ad+" ("+store.personel.sicil+")"):"";
+  const gl=$("gecmisListe");if(gl){store.gecmis=store.gecmis||[];gl.innerHTML=store.gecmis.length?store.gecmis.slice(0,10).map(g=>`<div class="kv"><span>${g.tarih}</span><b>Görev ${g.gorevno}</b></div>`).join(""):'<p class="hint">Henüz kayıt yok</p>'};
   store.grupId=gorevToGrup(store.gorevNo||1);
   const _ig=$("inGorev");if(_ig&&document.activeElement!==_ig)_ig.value=store.gorevNo||"";
  const tb=$("tbody");tb.innerHTML="";
@@ -334,10 +389,17 @@ function tick(){
    alarmBaslat(key,`🚏 PAR ${next.r.k1} • ${next.i+1}. tur • ${Math.ceil(dk)} dk kaldı`);
    setTimeout(()=>{if(!alarmAktif)bn.style.display="none"},90000);}
  }else{
+  if(!store.veri.length){
+   $("geriSayim").textContent="--:--:--";$("sonrakiTxt").textContent="Görev No girin";$("turNo").textContent="-";
+   $("progBar").style.width="0%";
+   $("mTur").textContent="-/-";$("mKalan").textContent="-";$("mTamam").textContent=tamam;
+   $("bKalan").textContent="-";$("bTamam").textContent=tamam;$("bSonraki").textContent="—";$("bDurum").textContent="⌨️ Görev bekleniyor";
+  }else{
   $("geriSayim").textContent="00:00:00";$("sonrakiTxt").textContent="—";$("turNo").textContent="—";
   $("progBar").style.width="100%";
   $("mTur").textContent=store.veri.length+"/"+store.veri.length;$("mKalan").textContent=0;$("mTamam").textContent=tamam;
   $("bKalan").textContent=0;$("bTamam").textContent=tamam;$("bSonraki").textContent="—";$("bDurum").textContent="✅ Vardiya bitti";
+  }
  }
 }
 document.querySelectorAll("nav.tabbar button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav.tabbar button").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));$(b.dataset.tab).classList.add("active");window.scrollTo({top:0})});
@@ -347,7 +409,9 @@ $("testBtn").onclick=()=>{notify("Test","Uyarı sistemi çalışıyor ✅");alar
 let _gorevT=null;
 $("inGorev").oninput=()=>{clearTimeout(_gorevT);_gorevT=setTimeout(async()=>{const v=$("inGorev").value.trim();if(!v)return;store.gorevNo=v;persist();warned.clear();store.grupId=gorevToGrup(v);if(sbActive()){await sbLoadRows()}else{render()}},600)};
 $("yenileBtn").onclick=()=>{if(sbActive())sbRefresh();else{render();alert("Çevrimdışı veri kullanılıyor")}};
+$("cikisBtn").onclick=()=>{store.personel=null;persist();$("loginModal").classList.add("acik")};
 applyTheme();initForm();render();setInterval(tick,1000);sbRefresh();setInterval(()=>{if(sbActive())sbLoadRows().catch(()=>{})},5*60*1000);
+if(!store.personel)$("loginModal").classList.add("acik");
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
