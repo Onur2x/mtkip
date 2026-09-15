@@ -98,6 +98,10 @@ nav.tabbar button{background:none;box-shadow:none;color:var(--muted);display:fle
 nav.tabbar button.on{color:var(--text);background:var(--chip)}
 nav.tabbar button i{font-size:22px;font-style:normal}
 .hint{font-size:12px;color:var(--muted);line-height:1.6}
+.bitti-kart{display:none;background:linear-gradient(135deg,#065f46,#16a34a);border-radius:22px;padding:22px;text-align:center;margin:12px 0;box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.bitti-kart .e{font-size:44px}
+.bitti-kart b{display:block;font-size:24px;color:#fff;margin:6px 0 2px}
+.bitti-kart span{font-size:15px;color:#d1fae5}
 .hz{display:inline-block;font-size:10px;font-weight:900;padding:1px 8px;border-radius:99px;margin-top:3px}
 .hz-g{background:#16a34a;color:#fff}
 .hz-c{background:#dc2626;color:#fff}
@@ -160,6 +164,7 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 <div class="chrono" id="geriSayim">--:--:--</div>
 <div class="bar" id="progWrap"><div id="progBar"></div></div>
 </div>
+<div id="bittiKarti" class="bitti-kart"><div class="e">🎉</div><b>Geçmiş olsun!</b><span>İyi istirahatler 😴</span></div>
 <div class="mini">
 <div><b id="mTur">-</b><span>TUR</span></div>
 <div><b id="mKalan">-</b><span>KALAN</span></div>
@@ -495,6 +500,7 @@ function tick(){
    // Moladaysa sıradaki tur komple yeşil (row-now), seferdeyse sıradaki outline (row-next)
    $("s"+next.i)?.classList.add(aktif0>=0?"row-next":"row-now");
   $("sonrakiTxt").textContent=next.r.k1;$("turNo").textContent=next.i+1;
+  $("bittiKarti").style.display="none";
   const ms=next.t-now,dk=ms/60000,s=Math.floor(ms/1000);
   const hh=String(Math.floor(s/3600)).padStart(2,"0"),mm=String(Math.floor(s%3600/60)).padStart(2,"0"),ss=String(s%60).padStart(2,"0");
   $("geriSayim").innerHTML=`${hh}:${mm}<small>:${ss}</small>`;
@@ -528,12 +534,13 @@ function tick(){
  }else{
   if(!store.veri.length){
    $("geriSayim").textContent="--:--:--";$("sonrakiTxt").textContent="Görev No girin";$("turNo").textContent="-";
-   $("progBar").style.width="0%";
+   $("progBar").style.width="0%";$("bittiKarti").style.display="none";
    $("mTur").textContent="-/-";$("mKalan").textContent="-";$("mTamam").textContent=tamam;
    $("bKalan").textContent="-";$("bTamam").textContent=tamam;$("bSonraki").textContent="—";$("bDurum").textContent="⌨️ Görev bekleniyor";
-  }else{
+  }  else{
   $("geriSayim").textContent="00:00:00";$("sonrakiTxt").textContent="—";$("turNo").textContent="—";
   $("progBar").style.width="100%";
+  $("bittiKarti").style.display="block";
   $("mTur").textContent=store.veri.length+"/"+store.veri.length;$("mKalan").textContent=0;$("mTamam").textContent=tamam;
   $("bKalan").textContent=0;$("bTamam").textContent=tamam;$("bSonraki").textContent="—";$("bDurum").textContent="✅ Vardiya bitti";
   }
