@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin İçe Aktarma (Gizli)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#0b1220;color:#f1f5f9}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 60px}
+h1{font-size:18px}h2{font-size:15px;color:#93a3b8;margin:18px 0 6px}
+.card{background:#16233f;border:1px solid #334155;border-radius:16px;padding:14px;margin:10px 0}
+label{font-size:13px;color:#93a3b8;display:block;margin:8px 0 4px}
+select,textarea,button{font-size:14px;padding:11px;border-radius:12px;border:1px solid #475569}
+select{background:#fff;color:#111}
+textarea{width:100%;min-height:130px;font-family:Consolas,monospace;font-size:12px;background:#0f172a;color:#e2e8f0}
+button{background:#22c55e;color:#052e16;font-weight:800;border:none;cursor:pointer;margin:6px 6px 0 0}
+button.ghost{background:#334155;color:#fff}
+table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+th,td{border:1px solid #334155;padding:5px 6px;text-align:center}
+th{background:#1e293b;color:#93a3b8}
+.warn{background:#451a03;border:1px solid #f59e0b;border-radius:12px;padding:10px;margin:8px 0;font-size:13px}
+.ok{background:#052e16;border:1px solid #22c55e;border-radius:12px;padding:10px;margin:8px 0;font-size:13px}
+.hint{font-size:12px;color:#93a3b8;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🔒 Admin İçe Aktarma <span style="font-size:12px;color:#93a3b8">(personelle paylaşılmaz)</span></h1>
+<p class="hint">Excel'den kopyala → aşağıya yapıştır → <b>SQL Üret</b> → çıkan SQL'i Supabase &gt; SQL Editor'de çalıştır.<br>
+Eşleşme: aynı görevin PAR ve BOS saatleri sıralanıp 1-1, 2-2 eşleşir. Gece yarısı (00:xx) varışlar en sona alınır. Tur süresi 51 dk sabit, dinlenme = önceki BOS → sonraki PAR farkı (dk).</p>
+
+<div class="card">
+<label>Gün</label>
+<select id="gun"><option value="1">1 - Hafta İçi (1-99)</option><option value="2">2 - Cumartesi (101-199)</option><option value="3">3 - Pazar (201-299)</option></select>
+<label>SOL BLOK = PAR (ilk istasyon) — Excel'den kopyala yapıştır</label>
+<textarea id="parTxt" placeholder="205&#9;1&#9;1&#9;06:00:00&#10;206&#9;2&#9;2&#9;06:10:11"></textarea>
+<label>SAĞ BLOK = BOS (son istasyon) — Excel'den kopyala yapıştır</label>
+<textarea id="bosTxt" placeholder="1&#9;4&#9;06:05:35&#9;&#9;203"></textarea>
+<div><button id="uretBtn">⚙️ SQL Üret</button></div>
+</div>
+
+<div id="sonuc"></div>
+
+<div class="card">
+<h2>📄 Üretilen SQL</h2>
+<textarea id="sqlTxt" style="min-height:200px" readonly></textarea>
+<div><button id="kopyalaBtn" class="ghost">📋 Kopyala</button><button id="indirBtn" class="ghost">💾 .sql İndir</button></div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const sn=hm=>{const[a,b,c]=hm.split(":").map(Number);let s=a*3600+b*60+(c||0);if(s<3*3600)s+=86400;return s};
+const norm=t=>{const m=t.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!m)return null;return [m[1].padStart(2,"0"),m[2],(m[3]||"00")].join(":")};
+function parse(txt,mod){
+ const out=[],bad=[];
+ txt.split(/\r?\n/).forEach((ln,i)=>{
+  ln=ln.trim();if(!ln)return;
+  const cells=ln.split(/[\t;]+/).map(c=>c.trim()).filter(c=>c!=="");
+  const tcell=cells.find(c=>/\d{1,2}:\d{2}/.test(c));
+  const nums=cells.filter(c=>/^\d{1,3}$/.test(c));
+  const saat=tcell?norm(tcell):null;
+  const gorev=mod==="par"?nums[0]:nums[nums.length-1];
+  if(saat&&gorev)out.push({gorev:String(+gorev),saat});
+  else bad.push(i+1);
+ });
+ return{out,bad};
+}
+$("uretBtn").onclick=()=>{
+ const ttid=+$("gun").value;
+ const P=parse($("parTxt").value,"par"),B=parse($("bosTxt").value,"bos");
+ const parM=new Map(),bosM=new Map();
+ P.out.forEach(r=>{if(!parM.has(r.gorev))parM.set(r.gorev,[]);parM.get(r.gorev).push(r.saat)});
+ B.out.forEach(r=>{if(!bosM.has(r.gorev))bosM.set(r.gorev,[]);bosM.get(r.gorev).push(r.saat)});
+ [...parM.values()].forEach(a=>a.sort());[...bosM.values()].forEach(a=>a.sort((x,y)=>sn(x)-sn(y)));
+ const gorevler=[...new Set([...parM.keys(),...bosM.keys()])].sort((a,b)=>a-b);
+ let html="",warn=[],vals=[],toplam=0;
+ html+=`<table><thead><tr><th>Görev</th><th>Run</th><th>PAR</th><th>BOS</th><th>Seyahat</th><th>Dinlenme</th></tr></thead><tbody>`;
+ gorevler.forEach(g=>{
+  const P0=parM.get(g)||[],B0=bosM.get(g)||[];
+  if(P0.length!==B0.length)warn.push(`Görev ${g}: PAR ${P0.length} adet, BOS ${B0.length} adet — ${Math.min(P0.length,B0.length)} tur alındı`);
+  const n=Math.min(P0.length,B0.length);
+  for(let i=0;i<n;i++){
+   const k1=P0[i],k2=B0[i];
+   let sey=Math.round((sn(k2)-sn(k1))/60);if(sey<0)sey+=1440;
+   let din=i===0?0:Math.round((sn(k1)-sn(B0[i-1]))/60);if(din<0)din+=1440;
+   if(sey<5||sey>90)warn.push(`Görev ${g} run ${i+1}: seyahat ${sey} dk — kontrol et (${k1} → ${k2})`);
+   html+=`<tr><td>${g}</td><td>${i+1}</td><td>${k1}</td><td>${k2}</td><td>${sey}'</td><td>${din}'</td></tr>`;
+   vals.push(`(${ttid},'${g}',${i+1},0,'${k1}',${din},51)`,`(${ttid},'${g}',${i+1},1,'${k2}',${din},51)`);
+   toplam++;
+  }
+ });
+ html+=`</tbody></table>`;
+ if(P.bad.length)warn.push("PAR'da okunamayan satırlar: "+P.bad.join(","));
+ if(B.bad.length)warn.push("BOS'ta okunamayan satırlar: "+B.bad.join(","));
+ $("sonuc").innerHTML=(toplam?`<div class="ok">✅ ${toplam} tur (${vals.length} satır) hazır</div>`:`<div class="warn">⚠️ Veri yok</div>`)+warn.map(w=>`<div class="warn">⚠️ ${w}</div>`).join("")+html;
+ const sql=`-- ${$("gun").selectedOptions[0].textContent} — ${toplam} tur\ninsert into public.timetable_rows (ttid,gorevno,run,yon,saat,dinlenme_dk,tur_suresi_dk) values\n`+vals.join(",\n")+`\non conflict (ttid,gorevno,run,yon) do update set saat=excluded.saat, dinlenme_dk=excluded.dinlenme_dk, tur_suresi_dk=excluded.tur_suresi_dk;`;
+ $("sqlTxt").value=vals.length?sql:"";
+};
+$("kopyalaBtn").onclick=()=>{$("sqlTxt").select();document.execCommand("copy");alert("Kopyalandı")};
+$("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([$("sqlTxt").value],{type:"text/sql"}));a.download=`seed_gun${g}.sql`;a.click()};
+</script>
+</body>
+</html>
