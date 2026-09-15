@@ -16,6 +16,8 @@ create table if not exists public.gorev_log (
   created_at timestamptz default now()
 );
 create index if not exists gorev_log_sicil_tarih on public.gorev_log (sicil, tarih);
+-- günde 1 kayıt: aynı gün ikinci görev yazılırsa güncellenir (çift kayıt olmaz)
+create unique index if not exists gorev_log_sicil_tarih_uniq on public.gorev_log (sicil, tarih);
 
 alter table public.personel enable row level security;
 alter table public.gorev_log enable row level security;
