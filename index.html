@@ -403,7 +403,8 @@ function tick(){
   else if(dk<=15){bar.style.background="linear-gradient(90deg,#f59e0b,#fb923c)";wrap.classList.remove("kritik")}
   else{bar.style.background="linear-gradient(90deg,var(--accent),#4ade80)";wrap.classList.remove("kritik")}
   const kalanTur=store.veri.filter(r=>r.k1&&tParse(r.k1)>now).length;
-  $("mTur").textContent=(next.i+1)+"/"+store.veri.length;$("mKalan").textContent=kalanTur;$("mTamam").textContent=tamam;
+  const konumIdx=aktif0>=0?aktif0:next.i;
+  $("mTur").textContent=(konumIdx+1)+"/"+store.veri.length;$("mKalan").textContent=kalanTur;$("mTamam").textContent=tamam;
   $("bKalan").textContent=kalanTur;$("bTamam").textContent=tamam;$("bSonraki").textContent=next.r.k1;
   // seferde mi molada mı
   const aktif=store.veri.findIndex(r=>r.k1&&r.k2&&now>=tParse(r.k1)&&now<=tParse(r.k2));
