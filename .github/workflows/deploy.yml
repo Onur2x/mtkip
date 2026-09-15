@@ -1,0 +1,33 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Supabase config uret (gizli kasadan, repoya yazılmaz)
+        run: |
+          cat > supabase-config.js <<'EOF'
+          window.__SB__ = {
+            URL: "${{ secrets.SUPABASE_URL }}",
+            ANON_KEY: "${{ secrets.SUPABASE_ANON_KEY }}"
+          };
+          EOF
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
