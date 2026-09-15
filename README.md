@@ -6,14 +6,14 @@ Android + iOS'ta link ile çalışan web uygulaması.
 - `index.html` : ana uygulama (görseldeki tablo: Dinlenme | PAR | İlk Kalkış | BOS | Son Kalkış | Tur Süresi)
 - `manifest.webmanifest`, `sw.js` : telefona "Ana Ekrana Ekle" ile tam ekran kurulum için
 
-## GitHub ile yayınlama (ücretsiz link)
-1. github.com'da yeni repo aç (örn `tren-takip`)
-2. Bu klasördeki 3 dosyayı yükle (Add file > Upload files)
-3. Settings > Pages > Branch: `main` / `/ (root)` > Save
-4. 1-2 dk sonra link hazır: `https://kullaniciadi.github.io/tren-takip/`
-5. Bu linki personele at. Android (Chrome) ve iPhone (Safari) ile açıp:
-   - Android: ⋮ > "Ana ekrana ekle"
-   - iPhone: Paylaş > "Ana Ekrana Ekle"
+## GitHub ile yayınlama (güvenli yöntem)
+1. github.com'da yeni repo aç (örn `m8-takip`) → **Public**.
+2. Bu klasördeki dosyaları yükle — ama **`supabase-config.js` dosyasını YÜKLEME** (`.github`, `.gitignore`, `supabase-config.example.js` yüklenir).
+3. Repo → **Settings → Secrets → Actions** → New secret: `SUPABASE_URL` (https://...supabase.co) ve `SUPABASE_ANON_KEY` (publishable/anon key). Anahtar repoda görünmez, sadece yayında kullanılır.
+4. **Settings → Pages** → Source: **GitHub Actions** seç. İlk push'ta otomatik yayınlanır: `https://kullaniciadin.github.io/m8-takip/`
+5. Linki personele at (Ana Ekrana Ekle ile kurarlar).
+
+## Supabase kurulumu (sadece sen, bir kez)
 
 ## Supabase kurulumu (sadece sen, bir kez)
 1. supabase.com'da proje aç > SQL Editor > `supabase_schema.sql` içeriğini çalıştır (gruplar + örnek görev 6 gelir). Bunu SADECE SEN yaparsın, personel yapmaz.
