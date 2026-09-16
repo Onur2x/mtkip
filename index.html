@@ -126,6 +126,17 @@ nav.tabbar button i{font-size:22px;font-style:normal}
 .bag.off{background:#ef4444}
 .hint{font-size:12px;color:var(--muted);line-height:1.6}
 .siluet{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:170%;max-width:760px;color:var(--muted);opacity:.08;pointer-events:none;z-index:1}
+tbody tr.row-done td:first-child::before{content:"✓ "}
+tbody tr.row-now td:first-child::before{content:"▶ "}
+tbody tr.row-next td:first-child::before{content:"⏳ "}
+.count-card::before{animation:dalga 5s ease-in-out infinite}
+@keyframes dalga{50%{opacity:.5;transform:scale(1.18)}}
+[data-theme="gece"] .chrono,[data-theme="orman"] .chrono,[data-theme="okyanus"] .chrono,[data-theme="gunbatimi"] .chrono,[data-theme="bordo"] .chrono,[data-theme="uzum"] .chrono,[data-theme="kiraz"] .chrono,[data-theme="fume"] .chrono,[data-theme="karamel"] .chrono,[data-theme="zeytin"] .chrono{text-shadow:0 0 16px var(--accent),0 4px 20px rgba(0,0,0,.4)}
+[data-theme="gece"] .gorev-buyuk span,[data-theme="orman"] .gorev-buyuk span,[data-theme="okyanus"] .gorev-buyuk span,[data-theme="gunbatimi"] .gorev-buyuk span,[data-theme="bordo"] .gorev-buyuk span,[data-theme="uzum"] .gorev-buyuk span,[data-theme="kiraz"] .gorev-buyuk span,[data-theme="fume"] .gorev-buyuk span,[data-theme="karamel"] .gorev-buyuk span,[data-theme="zeytin"] .gorev-buyuk span{box-shadow:0 0 16px var(--accent)}
+button{position:relative;overflow:hidden}
+button::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:99px;background:rgba(255,255,255,.55);transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none}
+button:active::after{animation:ripple .55s}
+@keyframes ripple{from{opacity:.7;transform:translate(-50%,-50%) scale(0)}to{opacity:0;transform:translate(-50%,-50%) scale(28)}}
 .bitti-kart{display:none;background:linear-gradient(135deg,#065f46,#16a34a);border-radius:22px;padding:22px;text-align:center;margin:12px 0;box-shadow:0 12px 32px rgba(0,0,0,.3)}
 .bitti-kart .e{font-size:44px}
 .bitti-kart b{display:block;font-size:24px;color:#fff;margin:6px 0 2px}
@@ -536,12 +547,6 @@ async function sbLoadRows(){const sb=sbClient();if(!sb)return;
   if(turlar.length){store.veri=turlar;warned.clear();persist();render();gecmisEkle();logGorev();sahaGetir();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Görev ${store.gorevNo}`)}
   else{logGorev();sbDurumYaz(`⚠️ Görev ${store.gorevNo} için kayıt yok`)}}
 async function sbRefresh(){if(!sbActive()||!sbClient()){sbDurumYaz();return}try{await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}}
-function render(){
-  $("bGorev").textContent=store.gorevNo||"-";
-  $("gorevBuyuk").textContent=store.gorevNo||"-";
-  $("kullaniciTxt").textContent=store.personel?("👤 "+store.personel.ad+" ("+store.personel.sicil+")"+(seriHesapla()>=2?(" • 🔥 "+seriHesapla()+" gün"):"")):"";
-  const gl=$("gecmisListe");if(gl){store.gecmis=store.gecmis||[];gl.innerHTML=store.gecmis.length?store.gecmis.slice(0,10).map(g=>`<div class="kv"><span>${g.tarih}</span><b>Görev ${g.gorevno}</b></div>`).join(""):'<p class="hint">Henüz kayıt yok</p>'};
-  const ba=$("bAyim");if(ba){const d=new Date(),ay=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;ba.textContent=new Set((store.gecmis||[]).filter(g=>(g.tarih||"").slice(0,7)===ay).map(g=>g.tarih)).size};
 async function sahaGetir(){
  try{
   const sb=sbClient();if(!sb)return;
@@ -551,6 +556,12 @@ async function sahaGetir(){
   const el=$("sahaListe");if(el)el.innerHTML=uniq.length?uniq.map(g=>`<span style="display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:99px;padding:4px 12px;margin:2px;font-weight:800">Görev ${g} ✓</span>`).join(""):"Henüz kimse yok";
  }catch(e){}
 }
+function render(){
+  $("bGorev").textContent=store.gorevNo||"-";
+  $("gorevBuyuk").textContent=store.gorevNo||"-";
+  $("kullaniciTxt").textContent=store.personel?("👤 "+store.personel.ad+" ("+store.personel.sicil+")"+(seriHesapla()>=2?(" • 🔥 "+seriHesapla()+" gün"):"")):"";
+  const gl=$("gecmisListe");if(gl){store.gecmis=store.gecmis||[];gl.innerHTML=store.gecmis.length?store.gecmis.slice(0,10).map(g=>`<div class="kv"><span>${g.tarih}</span><b>Görev ${g.gorevno}</b></div>`).join(""):'<p class="hint">Henüz kayıt yok</p>'};
+  const ba=$("bAyim");if(ba){const d=new Date(),ay=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;ba.textContent=new Set((store.gecmis||[]).filter(g=>(g.tarih||"").slice(0,7)===ay).map(g=>g.tarih)).size};
   store.grupId=gorevToGrup(store.gorevNo||1);
   const _ig=$("inGorev");if(_ig&&document.activeElement!==_ig)_ig.value=store.gorevNo||"";
   if(store.gorevNo)gecmisEkle();
