@@ -367,7 +367,23 @@ async function logGorev(){
 }
 function applyTheme(){document.body.setAttribute("data-theme",store.tema);document.querySelector('meta[name="theme-color"]').content=TEMALAR.find(t=>t.id===store.tema)?.c||"#0f172a";
  const w=$("themes");w.innerHTML="";TEMALAR.forEach(t=>{const b=document.createElement("button");b.className="theme"+(t.id===store.tema?" on":"");b.innerHTML=`<span class="dot" style="background:${t.c};border:1px solid #888"></span>${t.ad}`;b.onclick=()=>{store.tema=t.id;persist();applyTheme()};w.appendChild(b)})}
-function persist(){localStorage.setItem("trenStore2",JSON.stringify(store))}
+function persist(){try{const s={...store};delete s.alarmOzel;delete s.mesajOzel;localStorage.setItem("trenStore2",JSON.stringify(s))}catch(e){alert("Ayar kaydedilemedi (hafıza dolu olabilir)")}}
+// özel sesler IndexedDB'de (localStorage kotasını şişirmesin diye)
+function _idb(){return new Promise((res,rej)=>{try{const q=indexedDB.open("m8ses",1);q.onupgradeneeded=()=>q.result.createObjectStore("s");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}})}
+async function idbSet(k,v){try{const db=await _idb();await new Promise((res,rej)=>{const t=db.transaction("s","readwrite");t.objectStore("s").put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}catch(e){}}
+async function idbGet(k){try{const db=await _idb();return await new Promise((res,rej)=>{const t=db.transaction("s","readonly");const g=t.objectStore("s").get(k);g.onsuccess=()=>res(g.result||null);g.onerror=()=>rej(g.error)})}catch(e){return null}}
+async function sesYukle(){
+ try{
+  // eski sürümden localStorage'da kalmış ses bloblarını taşı
+  let tasindi=false;
+  for(const k of["alarmOzel","mesajOzel"]){
+   if(store[k]&&String(store[k]).length>100000){try{await idbSet(k,store[k])}catch(e){} delete store[k];tasindi=true}
+  }
+  if(tasindi)persist();
+  const a=await idbGet("alarmOzel"),m=await idbGet("mesajOzel");
+  if(a)store.alarmOzel=a;if(m)store.mesajOzel=m;
+ }catch(e){}
+}
 function initForm(){$("inUyariDk").value=store.uyariDk;$("inSes").checked=store.ses;$("inTitresim").checked=store.titresim;$("inAlarmSes").value=store.alarmSes||"horn";$("inMesajSes").value=store.mesajSes||"chime";sbDurumYaz()}
 let _AC=null;
 function audio(){try{_AC=_AC||new (window.AudioContext||window.webkitAudioContext)();if(_AC.state==="suspended")_AC.resume();return _AC}catch(e){return null}}
@@ -416,7 +432,7 @@ function dosyaYukle(input,urlAlan,sesAlan,selectId){
  const f=input.files&&input.files[0];if(!f)return;
  if(f.size>2500000){alert("Dosya çok büyük (en fazla ~2.5 MB)");input.value="";return}
  const r=new FileReader();
- r.onload=()=>{try{store[urlAlan]=r.result;store[sesAlan]="ozel";$(selectId).value="ozel";persist();alert("Ses yüklendi ✅ Artık bu ses çalacak")}catch(e){alert("Kaydedilemedi (hafıza dolu olabilir)");input.value=""}};
+ r.onload=async()=>{try{await idbSet(urlAlan,r.result);store[urlAlan]=r.result;store[sesAlan]="ozel";$(selectId).value="ozel";persist();alert("Ses yüklendi ✅ Artık bu ses çalacak")}catch(e){alert("Kaydedilemedi");input.value=""}};
  r.readAsDataURL(f);
 }
 function notify(t,b){if("Notification" in window&&Notification.permission==="granted"){try{new Notification(t,{body:b})}catch(e){}} if(navigator.serviceWorker?.controller)navigator.serviceWorker.controller.postMessage({title:t,body:b})}
@@ -562,7 +578,7 @@ $("yenileBtn").onclick=()=>{if(sbActive())sbRefresh();else{render();alert("Çevr
 $("geceBtn").onclick=()=>{$("geceModal").classList.add("acik")};
 $("geceModal").onclick=()=>{$("geceModal").classList.remove("acik")};
 $("cikisBtn").onclick=()=>{store.personel=null;persist();$("loginModal").classList.add("acik")};
-applyTheme();initForm();render();setInterval(tick,1000);sbRefresh();setInterval(()=>{if(sbActive())sbLoadRows().catch(()=>{})},5*60*1000);
+applyTheme();initForm();render();sesYukle();setInterval(tick,1000);sbRefresh();setInterval(()=>{if(sbActive())sbLoadRows().catch(()=>{})},5*60*1000);
 mesajKontrol();setInterval(mesajKontrol,30000);
 if(!store.personel)$("loginModal").classList.add("acik");
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
