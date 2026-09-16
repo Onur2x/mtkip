@@ -361,8 +361,11 @@ async function logGorev(){
   const sb=sbClient();if(!sb||!store.personel||!store.personel.sicil||!store.gorevNo)return;
   const d=new Date(),today=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   const k=store.personel.sicil+"|"+today;
-  if(k===_lastLog)return;_lastLog=k;
-  await sb.from("gorev_log").upsert({sicil:store.personel.sicil,gorevno:String(store.gorevNo),ttid:store.grupId,tarih:today},{onConflict:"sicil,tarih"});
+  if(k===_lastLog)return;
+  const row={sicil:store.personel.sicil,gorevno:String(store.gorevNo),ttid:store.grupId,tarih:today};
+  let r=await sb.from("gorev_log").upsert(row,{onConflict:"sicil,tarih"});
+  if(r.error)r=await sb.from("gorev_log").insert(row);
+  if(!r.error)_lastLog=k;
  }catch(e){}
 }
 function applyTheme(){document.body.setAttribute("data-theme",store.tema);document.querySelector('meta[name="theme-color"]').content=TEMALAR.find(t=>t.id===store.tema)?.c||"#0f172a";
