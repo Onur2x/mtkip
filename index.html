@@ -257,14 +257,15 @@ let store=JSON.parse(localStorage.getItem("trenStore2")||"null")||{uyariDk:5,ses
 let warned=new Set();
 const $=id=>document.getElementById(id);
 const tParse=hms=>{const n=new Date();const[a,b,c]=hms.split(":").map(Number);n.setHours(a,b||0,c||0,0);return n};
-// dinlenme: önce ileri (sonraki PAR − (BOS + seyahat)), yoksa geri (PAR − (önceki BOS + önceki seyahat))
+// dinlenme = bu PAR − (önceki BOS + önceki seyahat); ilk satırda dinlenme olmaz
 function dinlenmeler(v){
- const fwd=(k1,k2,nk1)=>{if(k2<k1)k2+=86400000;if(nk1<=k2)nk1+=86400000;return Math.max(0,Math.ceil((nk1-(k2+(k2-k1)))/60000))};
+ const fwd=(a1,a2,b1)=>{if(a2<a1)a2+=86400000;if(b1<=a2)b1+=86400000;return Math.max(0,Math.ceil((b1-(a2+(a2-a1)))/60000))};
  return v.map((r,i)=>{
-  const nx=v[i+1],pv=v[i-1];
-  if(r.k1&&r.k2&&nx&&nx.k1)return fwd(tParse(r.k1).getTime(),tParse(r.k2).getTime(),tParse(nx.k1).getTime());
+  if(i===0)return "–";
+  const pv=v[i-1];
   if(r.k1&&pv&&pv.k1&&pv.k2)return fwd(tParse(pv.k1).getTime(),tParse(pv.k2).getTime(),tParse(r.k1).getTime());
-  if(i===0)return 0;
+  const nx=v[i+1];
+  if(r.k1&&r.k2&&nx&&nx.k1)return fwd(tParse(r.k1).getTime(),tParse(r.k2).getTime(),tParse(nx.k1).getTime());
   return "–";
  });
 }
@@ -456,7 +457,7 @@ async function sbLoadRows(){const sb=sbClient();if(!sb)return;
   store.hz={};(h.data||[]).forEach(x=>{store.hz[String(x.saat).slice(0,8)]=x.tip});
  }catch(e){}
   if(turlar.length){store.veri=turlar;warned.clear();persist();render();gecmisEkle();logGorev();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Görev ${store.gorevNo}`)}
- else sbDurumYaz(`⚠️ Görev ${store.gorevNo} için kayıt yok`)}
+  else{logGorev();sbDurumYaz(`⚠️ Görev ${store.gorevNo} için kayıt yok`)}}
 async function sbRefresh(){if(!sbActive()||!sbClient()){sbDurumYaz();return}try{await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}}
 function render(){
   $("bGorev").textContent=store.gorevNo||"-";
@@ -465,6 +466,7 @@ function render(){
   const gl=$("gecmisListe");if(gl){store.gecmis=store.gecmis||[];gl.innerHTML=store.gecmis.length?store.gecmis.slice(0,10).map(g=>`<div class="kv"><span>${g.tarih}</span><b>Görev ${g.gorevno}</b></div>`).join(""):'<p class="hint">Henüz kayıt yok</p>'};
   store.grupId=gorevToGrup(store.gorevNo||1);
   const _ig=$("inGorev");if(_ig&&document.activeElement!==_ig)_ig.value=store.gorevNo||"";
+  if(store.gorevNo)gecmisEkle();
  const tb=$("tbody");tb.innerHTML="";
  // güvenlik: PAR saati BOS'tan geç ise (yon ters girilmiş veri) otomatik düzelt (gece yarısı hariç)
  store.veri.forEach(r=>{if(r.k1&&r.k2&&r.k1>r.k2&&+String(r.k2).slice(0,2)>=3){const t=r.k1;r.k1=r.k2;r.k2=t}});

@@ -123,13 +123,13 @@ $("uretBtn").onclick=async()=>{
    const n=pairs.length;
    let sey=Math.round((sn(k2)-sn(k1))/60);
    const travel=sn(k2)-sn(k1);
-   let din=0;
-   if(i<n-1){din=Math.ceil((sn(pairs[i+1][0])-(sn(k2)+travel))/60);
-    if(din<0)warn.push(`Görev ${g} run ${i+1}: dinlenme negatif (${din} dk) — saatleri kontrol et`);}
-   else if(i>0){const[pk1,pk2]=pairs[i-1];din=Math.ceil((sn(k1)-(sn(pk2)+(sn(pk2)-sn(pk1))))/60);
+   // dinlenme bu PAR'dan: PAR − (önceki BOS + önceki seyahat); ilk turda yok
+   let din=0,dinGoster="–";
+   if(i>0){const[pk1,pk2]=pairs[i-1];din=Math.ceil((sn(k1)-(sn(pk2)+(sn(pk2)-sn(pk1))))/60);
+    dinGoster=String(din);
     if(din<0)warn.push(`Görev ${g} run ${i+1}: dinlenme negatif (${din} dk) — saatleri kontrol et`);}
    if(sey<5||sey>90)warn.push(`Görev ${g} run ${i+1}: seyahat ${sey} dk — kontrol et (${k1} → ${k2})`);
-   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${i+1},this)"></td><td>${g}</td><td>${i+1}</td><td>${k1}</td><td>${k2}</td><td>${sey}'</td><td>${din}'</td></tr>`;
+   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${i+1},this)"></td><td>${g}</td><td>${i+1}</td><td>${k1}</td><td>${k2}</td><td>${sey}'</td><td>${dinGoster}'</td></tr>`;
    items.push({g,run:i+1,yon:0,saat:k1,din},{g,run:i+1,yon:1,saat:k2,din});
    toplam++;
   });
