@@ -1,6 +1,6 @@
 {
-  "name": "Tren Kalkış Takip",
-  "short_name": "Kalkış",
+  "name": "MakinistTakip",
+  "short_name": "MakinistTakip",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",

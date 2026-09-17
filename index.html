@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f172a">
-<title>Tren Kalkış Takip</title>
+<title>MakinistTakip</title>
 <link rel="manifest" href="manifest.webmanifest">
+<meta name="application-name" content="MakinistTakip">
+<meta name="apple-mobile-web-app-title" content="MakinistTakip">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <style>
@@ -314,7 +316,8 @@ button:active::after{animation:ripple .55s}
 </div>
 <script src="supabase-config.js"></script>
 <script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+let createClient=null;
+try{({createClient}=await import("https://esm.sh/@supabase/supabase-js@2"))}catch(e){console.warn("Supabase CDN yok — çevrimdışı mod")}
 const ORNEK=[{d:28,k1:"07:33:19",k2:"08:00:04",t:51,run:1},{d:49,k1:"08:54:46",k2:"09:21:31",t:51,run:2},{d:49,k1:"10:36:36",k2:"11:03:21",t:51,run:3},{d:49,k1:"12:18:26",k2:"12:45:11",t:51,run:4},{d:59,k1:"14:10:27",k2:"14:37:12",t:51,run:5},{d:18,k1:"15:21:44",k2:"15:48:29",t:51,run:6}];
 const TEMALAR=[{id:"gece",ad:"🌙 Gece",c:"#0b1220"},{id:"gunduz",ad:"☀️ Gündüz",c:"#f1f5f9"},{id:"orman",ad:"🌲 Orman",c:"#065f46"},{id:"okyanus",ad:"🌊 Okyanus",c:"#0c4a6e"},{id:"gunbatimi",ad:"🌅 Günbatımı",c:"#6d28d9"},{id:"bordo",ad:"🍷 Bordo",c:"#991b1b"},{id:"seker",ad:"🍬 Şeker",c:"#fce7f3"},{id:"kiraz",ad:"🌸 Kiraz",c:"#9d174d"},{id:"lila",ad:"💜 Lila",c:"#ede9fe"},{id:"uzum",ad:"🍇 Üzüm",c:"#5b21b6"},{id:"buz",ad:"🧊 Buz",c:"#e0f2fe"},{id:"fume",ad:"🌫️ Füme",c:"#27272a"},{id:"karamel",ad:"☕ Karamel",c:"#6b4c22"},{id:"zeytin",ad:"🫒 Zeytin",c:"#3f6212"}];
 let store=JSON.parse(localStorage.getItem("trenStore2")||"null")||{uyariDk:5,ses:true,titresim:true,tema:"gece",veri:[],sbUrl:"",sbKey:"",grupId:1,gorevNo:"",sbOn:true,personel:null};
@@ -507,6 +510,20 @@ function dosyaYukle(input,urlAlan,sesAlan,selectId){
  r.readAsDataURL(f);
 }
 function notify(t,b){if("Notification" in window&&Notification.permission==="granted"){try{new Notification(t,{body:b})}catch(e){}} if(navigator.serviceWorker?.controller)navigator.serviceWorker.controller.postMessage({title:t,body:b})}
+/* Kapalıyken çalan yerel alarm (destekleyen tarayıcıda: Android Chrome). Süresi dolunca OS gösterir. */
+let _alarmKey="";
+async function yerelAlarmKur(nx){
+ try{
+  if(typeof TimestampTrigger==="undefined"||!("serviceWorker" in navigator))return;
+  if(!nx||!nx.r||!nx.r.k1||Notification.permission!=="granted")return;
+  const at=nx.t.getTime()-store.uyariDk*60000;
+  const key=nx.i+"_"+nx.r.k1+"_"+store.uyariDk;
+  if(at<=Date.now()+5000||key===_alarmKey){_alarmKey=key;return}
+  const reg=await navigator.serviceWorker.ready;
+  _alarmKey=key;
+  await reg.showNotification("🚂 Kalkış yaklaşıyor",{body:`PAR ${nx.r.k1} • ${nx.p+1}. tur`,tag:"m8-"+key,showTrigger:new TimestampTrigger(at)});
+ }catch(e){}
+}
 /* ---- SUPABASE salt-okunur katman ---- */
 let _sb=null;
 function sbCreds(){const emb=(window.__SB__||{});const url=(emb.URL||"").trim(),key=(emb.ANON_KEY||"").trim();
@@ -515,7 +532,7 @@ function sbCreds(){const emb=(window.__SB__||{});const url=(emb.URL||"").trim(),
  if(store.sbUrl&&store.sbKey)return{url:store.sbUrl,key:store.sbKey,from:"manuel"};
  return null}
 function sbActive(){const c=sbCreds();if(!c)return false;if(c.from==="gomulu")return store.sbOn!==false;return store.sbOn}
-function sbClient(){const c=sbCreds();if(!c)return null;try{if(!_sb||_sb._url!==c.url||_sb._key!==c.key)_sb=createClient(c.url,c.key);return _sb}catch(e){return null}}
+function sbClient(){const c=sbCreds();if(!c||!createClient)return null;try{if(!_sb||_sb._url!==c.url||_sb._key!==c.key)_sb=createClient(c.url,c.key);return _sb}catch(e){return null}}
 function sbDurumYaz(msg){const a=$("sbDurum"),b=$("sbAyarDurum");const txt=msg||(sbActive()?"🟢 Supabase bağlı (salt-okunur)":"⚪ Çevrimdışı / örnek veri");if(a)a.textContent=txt;if(b)b.textContent=txt}
 function rowsToTurlar(rows){
  // aynı (run) içindeki yon 0 (PAR) ve yon 1 (BOS) eşleştir; tek yönlü turlar korunur
@@ -639,6 +656,7 @@ function tick(){
    notify("Kalkış Uyarısı",`${next.r.k1} kalkışına ${Math.ceil(dk)} dk kaldı`);
    alarmBaslat(key,`🚏 PAR ${next.r.k1} • ${next.p+1}. tur • ${Math.ceil(dk)} dk kaldı`);
    setTimeout(()=>{if(!alarmAktif)bn.style.display="none"},90000);}
+  yerelAlarmKur(next);
  }else{
   if(!store.veri.length){
    $("geriSayim").textContent="--:--:--";$("geriSayim").classList.remove("kritik");$("yapbar").classList.remove("goster");$("sonrakiTxt").textContent="Görev No girin";$("turNo").textContent="-";
