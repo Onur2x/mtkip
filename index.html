@@ -119,7 +119,7 @@ button{flex:1;font-size:15px;font-weight:800;padding:14px;border-radius:16px;bor
 button.ghost{background:var(--chip);color:var(--text);box-shadow:none;border:1px solid var(--line)}
 .switch{display:flex;align-items:center;gap:10px;background:var(--card);padding:12px 14px;border-radius:14px;margin:6px 0;border:1px solid var(--line);font-size:14px;font-weight:700}
 .switch input{width:22px;height:22px;accent-color:var(--accent)}
-nav.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:color-mix(in srgb,var(--bg2) 88%,transparent);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 10px calc(10px + env(safe-area-inset-bottom));z-index:30}
+nav.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:color-mix(in srgb,var(--bg2) 88%,transparent);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 6px calc(10px + env(safe-area-inset-bottom));z-index:30}
 nav.tabbar button{background:none;box-shadow:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;padding:8px;border-radius:14px}
 nav.tabbar button.on{color:var(--text);background:var(--chip)}
 nav.tabbar button i{font-size:22px;font-style:normal}
@@ -262,6 +262,19 @@ button:active::after{animation:ripple .55s}
 <div class="card"><h3>👥 BUGÜN SAHADA</h3><div id="sahaListe" class="hint">-</div></div>
 <p class="hint">Soldaki saatler ilk kalkış istasyonu (PAR), sağdaki saatler son istasyon (BOS) kalkışlarıdır. Soldaki sayı dinlenme, sağdaki sayı tur süresidir — detay açıklaması sonra eklenecek.</p>
 </section>
+<!-- DİĞER -->
+<section id="tab-diger" class="tab">
+<div class="card"><h3>📋 TALİMATLAR</h3><div id="talimatListe"><p class="hint">Yükleniyor...</p></div></div>
+<div class="card"><h3>📁 DOKÜMANLAR</h3><div id="dokListe" class="hint">-</div></div>
+<div class="card"><h3>🔄 TAKAS İSTEĞİ</h3>
+<label>Tarih<input type="date" id="tkTarih"></label>
+<label>Görev No<input id="tkGorev" inputmode="numeric" placeholder="örn 22"></label>
+<label>Hedef Sicil (boş bırakırsan herkese açık olur)<input id="tkHedef" inputmode="numeric"></label>
+<div class="btnrow"><button id="tkGonderBtn">Gönder</button></div>
+<div id="tkListe"></div>
+</div>
+<div class="card"><h3>📝 BİLGİ TESTİ</h3><div id="quizAlan"><div class="btnrow"><button id="quizBaslaBtn">▶️ Başla (5 soru)</button></div></div><div id="quizSonuc" class="hint"></div></div>
+</section>
 <!-- AYARLAR -->
 <section id="tab-ayar" class="tab">
 <div class="card"><h3>🎨 TEMA</h3><div class="themes" id="themes"></div></div>
@@ -310,7 +323,8 @@ button:active::after{animation:ripple .55s}
 </div>
 <nav class="tabbar">
 <button data-tab="tab-seferler" class="on"><i>⏱️</i>Seferler</button>
-<button data-tab="tab-tren"><i>🚄</i>Tren Bilgisi</button>
+<button data-tab="tab-tren"><i>🚄</i>Tren</button>
+<button data-tab="tab-diger"><i>📚</i>Diğer</button>
 <button data-tab="tab-ayar"><i>⚙️</i>Ayarlar</button>
 </nav>
 </div>
@@ -672,8 +686,8 @@ function tick(){
   }
  }
 }
-const _sira=["tab-seferler","tab-tren","tab-ayar"];let _aktifTab="tab-seferler";
-document.querySelectorAll("nav.tabbar button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav.tabbar button").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));const hedef=b.dataset.tab;const el=$(hedef);el.classList.add("active");el.style.animation="none";void el.offsetWidth;el.style.animation=(_sira.indexOf(hedef)>=_sira.indexOf(_aktifTab)?"slideL .28s ease":"slideR .28s ease");_aktifTab=hedef;window.scrollTo({top:0})});
+const _sira=["tab-seferler","tab-tren","tab-diger","tab-ayar"];let _aktifTab="tab-seferler";
+document.querySelectorAll("nav.tabbar button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav.tabbar button").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));const hedef=b.dataset.tab;const el=$(hedef);el.classList.add("active");el.style.animation="none";void el.offsetWidth;el.style.animation=(_sira.indexOf(hedef)>=_sira.indexOf(_aktifTab)?"slideL .28s ease":"slideR .28s ease");_aktifTab=hedef;if(hedef==="tab-diger")kurumsalYenile();window.scrollTo({top:0})});
 $("kaydetBtn").onclick=()=>{store.uyariDk=+$("inUyariDk").value||5;store.ses=$("inSes").checked;store.titresim=$("inTitresim").checked;store.otoGece=$("inOtoGece").checked;store.alarmSes=$("inAlarmSes").value;store.mesajSes=$("inMesajSes").value;persist();applyTheme();render();alert("Kaydedildi ✅")};
 $("alarmDosya").onchange=e=>dosyaYukle(e.target,"alarmOzel","alarmSes","inAlarmSes");
 $("mesajDosya").onchange=e=>dosyaYukle(e.target,"mesajOzel","mesajSes","inMesajSes");
@@ -685,7 +699,79 @@ $("bildirimBtn").onclick=async()=>{try{alert("Bildirim izni: "+await Notificatio
 $("testBtn").onclick=()=>{notify("Test","Uyarı sistemi çalışıyor ✅");alarmBaslat("test","TEST — düdük çalıyor, SUSTUR'a bas ✅")};
 let _gorevT=null;
 $("inGorev").oninput=()=>{clearTimeout(_gorevT);_gorevT=setTimeout(async()=>{const v=$("inGorev").value.trim();if(!v)return;store.gorevNo=v;persist();warned.clear();store.grupId=gorevToGrup(v);if(sbActive()){await sbLoadRows()}else{render()}},600)};
-$("yenileBtn").onclick=()=>{if(sbActive())sbRefresh();else{render();alert("Çevrimdışı veri kullanılıyor")}};
+$("yenileBtn").onclick=()=>{if(sbActive())sbRefresh();else{render();alert("Çevrimdışı veri kullanılıyor")};
+/* ---- KURUMSAL: talimat + doküman + takas + test ---- */
+async function talimatGetir(){
+ try{
+  const sb=sbClient();if(!sb)return;
+  const t=await sb.from("talimatlar").select("id,baslik,icerik").eq("aktif",true).order("id",{ascending:false}).limit(20);
+  if(t.error)return;
+  let ok=new Set();
+  if(store.personel&&store.personel.sicil){const o=await sb.from("talimat_okuma").select("talimat_id").eq("sicil",String(store.personel.sicil));(o.data||[]).forEach(x=>ok.add(x.talimat_id))}
+  const el=$("talimatListe");if(!el)return;
+  el.innerHTML=(t.data||[]).length?(t.data||[]).map(x=>`<div class="kv"><span style="text-align:left"><b>${x.baslik}</b><br><small>${(x.icerik||"").slice(0,120)}</small></span>${ok.has(x.id)?"<b>✅</b>":`<button class="ghost" style="flex:0 0 auto;padding:8px 12px" onclick="talimatOkudum(${x.id})">Okudum</button>`}</div>`).join(""):'<p class="hint">Talimat yok</p>';
+ }catch(e){}
+}
+window.talimatOkudum=async id=>{
+ try{const sb=sbClient();if(!sb||!store.personel)return;
+  await sb.from("talimat_okuma").insert({talimat_id:id,sicil:String(store.personel.sicil)});
+  talimatGetir();
+ }catch(e){}
+};
+async function dokGetir(){
+ try{
+  const sb=sbClient();if(!sb)return;
+  const{data,error}=await sb.storage.from("dokumanlar").list("",{limit:100});
+  if(error)return;
+  const el=$("dokListe");if(!el)return;
+  el.innerHTML=(data||[]).filter(f=>f.name!==".emptyFolderPlaceholder").length?(data||[]).filter(f=>f.name!==".emptyFolderPlaceholder").map(f=>{const u=sb.storage.from("dokumanlar").getPublicUrl(f.name).data.publicUrl;return `<div class="kv"><span style="text-align:left">📄 ${f.name}</span><b><a href="${u}" target="_blank" style="color:var(--accent)">Aç</a></b></div>`}).join(""):"Henüz doküman yok";
+ }catch(e){}
+}
+$("tkGonderBtn").onclick=async()=>{
+ try{
+  const sb=sbClient();if(!sb||!store.personel){alert("Önce giriş yap");return}
+  const tarih=$("tkTarih").value,gorev=$("tkGorev").value.trim(),hedef=$("tkHedef").value.trim();
+  if(!tarih||!gorev){alert("Tarih ve görev gerekli");return}
+  const{error}=await sb.from("takas").insert({isteyen_sicil:String(store.personel.sicil),hedef_sicil:hedef||null,tarih,gorevno:gorev});
+  if(error){alert("🔴 "+error.message);return}
+  alert("Takas isteği gönderildi ✅");takasListe();
+ }catch(e){}
+};
+async function takasListe(){
+ try{
+  const sb=sbClient();if(!sb||!store.personel)return;
+  const{data}=await sb.from("takas").select("tarih,gorevno,hedef_sicil,durum").eq("isteyen_sicil",String(store.personel.sicil)).order("created_at",{ascending:false}).limit(10);
+  const el=$("tkListe");if(!el)return;
+  const roz={bekliyor:"⏳ Bekliyor",onay:"✅ Onay",red:"❌ Red"};
+  el.innerHTML=(data||[]).length?(data||[]).map(r=>`<div class="kv"><span>${r.tarih} • Görev ${r.gorevno}${r.hedef_sicil?" → "+r.hedef_sicil:""}</span><b>${roz[r.durum]||r.durum}</b></div>`).join(""):'<p class="hint">İsteğin yok</p>';
+ }catch(e){}
+}
+let _quiz=[],_qi=0,_qd=0,_qy=0;
+async function quizBasla(){
+ try{
+  const sb=sbClient();if(!sb){alert("Bağlantı yok");return}
+  const{data,error}=await sb.from("sorular").select("id,soru,a,b,c,d,dogru").eq("aktif",true).limit(50);
+  if(error||!data||!data.length){alert("Soru yok");return}
+  _quiz=[...data].sort(()=>Math.random()-0.5).slice(0,5);_qi=0;_qd=0;_qy=0;
+  $("quizSonuc").textContent="";quizSor();
+ }catch(e){}
+}
+$("quizBaslaBtn").onclick=quizBasla;
+function quizSor(){
+ const q=_quiz[_qi],alan=$("quizAlan");
+ alan.innerHTML=`<p><b>${_qi+1}/5.</b> ${q.soru}</p>`+[q.a,q.b,q.c,q.d].map((s,i)=>`<div class="btnrow"><button class="ghost" style="text-align:left" onclick="quizCevap(${i+1})">${"ABCD"[i]}) ${s}</button></div>`).join("");
+}
+window.quizCevap=async i=>{
+ const q=_quiz[_qi];
+ if(i===q.dogru)_qd++;else _qy++;
+ _qi++;
+ if(_qi<_quiz.length){quizSor();return}
+ $("quizAlan").innerHTML=`<div class="btnrow"><button id="quizBaslaBtn2" class="ghost">🔄 Tekrar</button></div>`;
+ $("quizBaslaBtn2").onclick=quizBasla;
+ $("quizSonuc").textContent=`✅ ${_qd} doğru, ❌ ${_qy} yanlış`;
+ try{const sb=sbClient();if(sb&&store.personel)await sb.from("sinav_sonuc").insert({sicil:String(store.personel.sicil),dogru:_qd,yanlis:_qy})}catch(e){}
+};
+function kurumsalYenile(){talimatGetir();dokGetir();takasListe();}
 $("geceBtn").onclick=()=>{$("geceModal").classList.add("acik")};
 $("geceModal").onclick=()=>{$("geceModal").classList.remove("acik")};
 $("sosBtn").onclick=()=>{if(!store.personel){alert("Önce giriş yap");return}$("sosDet").textContent=`${store.personel.ad} (${store.personel.sicil}) • Görev ${store.gorevNo||"-"} — gönderilsin mi?`;$("sosModal").classList.add("acik")};

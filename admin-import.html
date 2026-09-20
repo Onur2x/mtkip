@@ -205,6 +205,35 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Görev</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="sosListe"></tbody></table>
 </div>
 <div class="card">
+<h2>📋 Talimatlar</h2>
+<label>Başlık</label><input id="tBaslik" autocomplete="off" placeholder="örn Hat çalışması">
+<label>İçerik</label><textarea id="tIcerik" style="min-height:70px"></textarea>
+<div><button id="tEkleBtn">➕ Ekle</button><button id="tYenileBtn" class="ghost">↻ Listele</button></div>
+<table style="margin-top:10px"><thead><tr><th>Başlık</th><th>Okuyan</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="tListe"></tbody></table>
+</div>
+<div class="card">
+<h2>📝 Soru Bankası + Sonuçlar</h2>
+<label>Soru</label><input id="sSoru" autocomplete="off">
+<label>A) <input id="sA" autocomplete="off"></label>
+<label>B) <input id="sB" autocomplete="off"></label>
+<label>C) <input id="sC" autocomplete="off"></label>
+<label>D) <input id="sD" autocomplete="off"></label>
+<label>Doğru cevap</label><select id="sDogru" style="width:100%"><option value="1">A</option><option value="2">B</option><option value="3">C</option><option value="4">D</option></select>
+<div><button id="sEkleBtn">➕ Soru Ekle</button><button id="sYenileBtn" class="ghost">↻ Sorular</button><button id="sSonucBtn" class="ghost">🏁 Sonuçlar</button></div>
+<div id="sAlan" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>🔄 Takas Talepleri</h2>
+<div><button id="tkYenileBtn" class="ghost">↻ Listele</button></div>
+<table style="margin-top:10px"><thead><tr><th>İsteyen</th><th>Tarih/Görev</th><th>Hedef</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="tkListe2"></tbody></table>
+</div>
+<div class="card">
+<h2>📁 Doküman Yükle</h2>
+<label>Dosya (PDF vb.)</label><input type="file" id="dokDosya">
+<div><button id="dokYukleBtn">⬆️ Yükle</button><button id="dokYenileBtn" class="ghost">↻ Listele</button></div>
+<table style="margin-top:10px"><thead><tr><th>Dosya</th><th>İşlem</th></tr></thead><tbody id="dokListe2"></tbody></table>
+</div>
+<div class="card">
 <h2>📊 Günlük Özet</h2>
 <label>Tarih</label><input type="date" id="ozTarih">
 <div><button id="ozBtn">📊 Getir</button></div>
@@ -328,6 +357,72 @@ window.sosSil=async id=>{
  if(error)alert(error.message);else sosListe();
 };
 setInterval(()=>sosListe(true),30000);
+$("tEkleBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const baslik=$("tBaslik").value.trim(),icerik=$("tIcerik").value.trim();
+ if(!baslik||!icerik){alert("Başlık ve içerik gerekli");return}
+ const{error}=await sb.from("talimatlar").insert({baslik,icerik});
+ if(error){alert("🔴 "+error.message);return}
+ $("tBaslik").value="";$("tIcerik").value="";tListe();
+};
+$("tYenileBtn").onclick=tListe;
+async function tListe(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const{data,error}=await sb.from("talimatlar").select("id,baslik,aktif,created_at").order("id",{ascending:false}).limit(30);
+ if(error){alert(error.message);return}
+ const o=await sb.from("talimat_okuma").select("talimat_id").limit(2000);
+ const say={};(o.data||[]).forEach(r=>say[r.talimat_id]=(say[r.talimat_id]||0)+1);
+ $("tListe").innerHTML=(data||[]).map(t=>`<tr><td style="text-align:left">${t.baslik}</td><td>${say[t.id]||0}</td><td>${t.aktif?"✅":"⛔"}</td><td><button class="ghost" onclick="tTgl(${t.id},${!t.aktif})">${t.aktif?"Kapat":"Aç"}</button> <button class="ghost" onclick="tSil(${t.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=4>Yok</td></tr>";
+}
+window.tTgl=async(id,aktif)=>{const{error}=await sb.from("talimatlar").update({aktif}).eq("id",id);if(error)alert(error.message);else tListe()};
+window.tSil=async id=>{if(!confirm("Talimat silinsin mi?"))return;const{error}=await sb.from("talimatlar").delete().eq("id",id);if(error)alert(error.message);else tListe()};
+$("sEkleBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const v=id=>$(id).value.trim();
+ if(!v("sSoru")||!v("sA")||!v("sB")||!v("sC")||!v("sD")){alert("Tüm alanlar gerekli");return}
+ const{error}=await sb.from("sorular").insert({soru:v("sSoru"),a:v("sA"),b:v("sB"),c:v("sC"),d:v("sD"),dogru:+$("sDogru").value});
+ if(error){alert("🔴 "+error.message);return}
+ ["sSoru","sA","sB","sC","sD"].forEach(id=>$(id).value="");sListe();
+};
+$("sYenileBtn").onclick=sListe;
+async function sListe(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const{data,error}=await sb.from("sorular").select("id,soru,aktif").eq("aktif",true).order("id",{ascending:false}).limit(30);
+ if(error){alert(error.message);return}
+ $("sAlan").innerHTML=`<table><thead><tr><th>Soru</th><th>İşlem</th></tr></thead><tbody>`+(data||[]).map(s=>`<tr><td style="text-align:left">${(s.soru||"").slice(0,60)}</td><td><button class="ghost" onclick="sSil(${s.id})">Sil</button></td></tr>`).join("")+`</tbody></table>`;
+}
+window.sSil=async id=>{if(!confirm("Soru silinsin mi?"))return;const{error}=await sb.from("sorular").update({aktif:false}).eq("id",id);if(error)alert(error.message);else sListe()};
+$("sSonucBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const p=await sb.from("personel").select("sicil,ad");const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
+ const{data,error}=await sb.from("sinav_sonuc").select("sicil,dogru,yanlis,created_at").order("created_at",{ascending:false}).limit(50);
+ if(error){alert(error.message);return}
+ $("sAlan").innerHTML=`<table><thead><tr><th>Sicil</th><th>Ad</th><th>Doğru/Yanlış</th><th>Zaman</th></tr></thead><tbody>`+(data||[]).map(r=>`<tr><td>${r.sicil}</td><td style="text-align:left">${ad[r.sicil]||"-"}</td><td>${r.dogru}/${r.yanlis}</td><td>${(r.created_at||"").slice(0,16).replace("T"," ")}</td></tr>`).join("")+`</tbody></table>`;
+};
+$("tkYenileBtn").onclick=tkListe2;
+async function tkListe2(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const{data,error}=await sb.from("takas").select("id,isteyen_sicil,hedef_sicil,tarih,gorevno,durum").eq("durum","bekliyor").order("created_at").limit(50);
+ if(error){alert(error.message);return}
+ const roz={bekliyor:"⏳",onay:"✅",red:"❌"};
+ $("tkListe2").innerHTML=(data||[]).map(r=>`<tr><td>${r.isteyen_sicil}</td><td>${r.tarih} • G${r.gorevno}</td><td>${r.hedef_sicil||"herkes"}</td><td>${roz[r.durum]}</td><td><button class="ghost" onclick="tkKarar(${r.id},'onay')">Onayla</button> <button class="ghost" onclick="tkKarar(${r.id},'red')">Reddet</button></td></tr>`).join("")||"<tr><td colspan=5>Bekleyen yok ✅</td></tr>";
+}
+window.tkKarar=async(id,durum)=>{const{error}=await sb.from("takas").update({durum}).eq("id",id);if(error)alert(error.message);else tkListe2()};
+$("dokYukleBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const f=$("dokDosya").files[0];if(!f){alert("Dosya seç");return}
+ const{error}=await sb.storage.from("dokumanlar").upload(f.name,f,{upsert:true});
+ if(error){alert("🔴 "+error.message);return}
+ alert("Yüklendi ✅");dokListe2();
+};
+$("dokYenileBtn").onclick=dokListe2;
+async function dokListe2(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const{data,error}=await sb.storage.from("dokumanlar").list("",{limit:100});
+ if(error){alert(error.message);return}
+ $("dokListe2").innerHTML=(data||[]).filter(f=>f.name!==".emptyFolderPlaceholder").map(f=>`<tr><td style="text-align:left">${f.name}</td><td><button class="ghost" onclick="dokSil('${f.name}')">Sil</button></td></tr>`).join("")||"<tr><td colspan=2>Boş</td></tr>";
+}
+window.dokSil=async n=>{if(!confirm(n+" silinsin mi?"))return;const{error}=await sb.storage.from("dokumanlar").remove([n]);if(error)alert(error.message);else dokListe2()};
 $("hEkleBtn").onclick=async()=>{
  if(!await _oturum()){alert("Önce giriş yap");return}
  const gorevno=$("hGorev").value.trim(),saat=$("hSaat").value,ttid=+$("hGun").value,tip=+$("hTip").value;
