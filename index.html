@@ -208,6 +208,7 @@ button:active::after{animation:ripple .55s}
 <button id="sosBtn" style="flex:0 0 52px;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;min-width:52px">SOS</button>
 <button id="yenileBtn" class="ghost" style="flex:0 0 52px">↻</button>
 </div>
+<div class="btnrow"><button id="baslaBtn" class="ghost">✅ Vardiyaya Başladım</button></div>
 <div id="sosModal" class="alarm-modal">
 <div class="alarm-box" style="background:linear-gradient(160deg,#450a0a,#b91c1c)">
 <div class="alarm-ico">🆘</div>
@@ -273,7 +274,7 @@ button:active::after{animation:ripple .55s}
 <div class="btnrow"><button id="tkGonderBtn">Gönder</button></div>
 <div id="tkListe"></div>
 </div>
-<div class="card"><h3>📝 BİLGİ TESTİ</h3><div id="quizAlan"><div class="btnrow"><button id="quizBaslaBtn">▶️ Başla (5 soru)</button></div></div><div id="quizSonuc" class="hint"></div></div>
+<div class="card"><h3>📝 BİLGİ TESTİ</h3><div id="quizAlan"><div class="btnrow"><button id="quizBaslaBtn">▶️ Başla (5 soru)</button></div></div><div id="quizSonuc" class="hint"></div><div id="liderListe" style="margin-top:8px"></div></div>
 </section>
 <!-- AYARLAR -->
 <section id="tab-ayar" class="tab">
@@ -423,7 +424,7 @@ async function girisYap(){
   if(error||!data){loginHata("Sicil bulunamadı");return}
   if(data.aktif===false){loginHata("Hesap pasif");return}
   store.personel={sicil,ad:data.ad};persist();
-  $("loginModal").classList.remove("acik");
+  $("loginModal").classList.remove("acik");baslamaKontrol();
  }finally{$("girisBtn").textContent="🔑 Giriş"}
 }
 $("girisBtn").onclick=girisYap;
@@ -670,7 +671,7 @@ function tick(){
    notify("Kalkış Uyarısı",`${next.r.k1} kalkışına ${Math.ceil(dk)} dk kaldı`);
    alarmBaslat(key,`🚏 PAR ${next.r.k1} • ${next.p+1}. tur • ${Math.ceil(dk)} dk kaldı`);
    setTimeout(()=>{if(!alarmAktif)bn.style.display="none"},90000);}
-  yerelAlarmKur(next);
+  yerelAlarmKur(next);hazirlikKur();
  }else{
   if(!store.veri.length){
    $("geriSayim").textContent="--:--:--";$("geriSayim").classList.remove("kritik");$("yapbar").classList.remove("goster");$("sonrakiTxt").textContent="Görev No girin";$("turNo").textContent="-";
@@ -700,6 +701,37 @@ $("testBtn").onclick=()=>{notify("Test","Uyarı sistemi çalışıyor ✅");alar
 let _gorevT=null;
 $("inGorev").oninput=()=>{clearTimeout(_gorevT);_gorevT=setTimeout(async()=>{const v=$("inGorev").value.trim();if(!v)return;store.gorevNo=v;persist();warned.clear();store.grupId=gorevToGrup(v);if(sbActive()){await sbLoadRows()}else{render()}},600)};
 $("yenileBtn").onclick=()=>{if(sbActive())sbRefresh();else{render();alert("Çevrimdışı veri kullanılıyor")}};
+async function baslamaKontrol(){
+ try{
+  const sb=sbClient();if(!sb||!store.personel)return;
+  const{data}=await sb.from("vardiya_baslama").select("saat").eq("sicil",String(store.personel.sicil)).eq("tarih",bugun()).maybeSingle();
+  const b=$("baslaBtn");
+  if(data&&data.saat){b.textContent=`✅ Başladın (${String(data.saat).slice(0,5)})`;b.classList.remove("ghost")}
+  else{b.textContent="✅ Vardiyaya Başladım";b.classList.add("ghost")}
+ }catch(e){}
+}
+$("baslaBtn").onclick=async()=>{
+ try{
+  const sb=sbClient();if(!sb||!store.personel){alert("Önce giriş yap");return}
+  const d=new Date(),saat=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,"0")).join(":");
+  const{error}=await sb.from("vardiya_baslama").upsert({sicil:String(store.personel.sicil),tarih:bugun(),saat,gorevno:String(store.gorevNo||"")},{onConflict:"sicil,tarih"});
+  if(error){alert("🔴 "+error.message);return}
+  baslamaKontrol();
+ }catch(e){}
+};
+let _hzKey="";
+async function hazirlikKur(){
+ try{
+  if(typeof TimestampTrigger==="undefined"||!("serviceWorker" in navigator))return;
+  if(Notification.permission!=="granted"||!store.veri.length)return;
+  const ilk=store.veri.find(r=>r.k1);if(!ilk)return;
+  const t0=tParse(ilk.k1).getTime(),at=t0-30*60000,key=bugun()+"_"+(store.gorevNo||"");
+  if(at<=Date.now()+60000||key===_hzKey){_hzKey=key;return}
+  const reg=await navigator.serviceWorker.ready;
+  _hzKey=key;
+  await reg.showNotification("🕐 Vardiyaya hazırlan",{body:`Görev ${store.gorevNo||""} • ilk kalkış ${ilk.k1.slice(0,5)}`,tag:"m8-hazir-"+key,showTrigger:new TimestampTrigger(at)});
+ }catch(e){}
+}
 /* ---- KURUMSAL: talimat + doküman + takas + test ---- */
 async function talimatGetir(){
  try{
@@ -771,7 +803,19 @@ window.quizCevap=async i=>{
  $("quizSonuc").textContent=`✅ ${_qd} doğru, ❌ ${_qy} yanlış`;
  try{const sb=sbClient();if(sb&&store.personel)await sb.from("sinav_sonuc").insert({sicil:String(store.personel.sicil),dogru:_qd,yanlis:_qy})}catch(e){}
 };
-function kurumsalYenile(){talimatGetir();dokGetir();takasListe();}
+function kurumsalYenile(){talimatGetir();dokGetir();takasListe();liderGetir();}
+async function liderGetir(){
+ try{
+  const sb=sbClient();if(!sb)return;
+  const s=await sb.from("sinav_sonuc").select("sicil,dogru,yanlis,created_at").order("created_at",{ascending:false}).limit(200);
+  if(s.error||!s.data||!s.data.length)return;
+  const p=await sb.from("personel").select("sicil,ad");const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
+  const en={};s.data.forEach(r=>{const k=r.sicil;if(!en[k]||r.dogru>en[k].dogru)en[k]=r});
+  const top=Object.entries(en).sort((a,b)=>b[1].dogru-a[1].dogru||a[1].yanlis-b[1].yanlis).slice(0,5);
+  const el=$("liderListe");if(!el)return;
+  el.innerHTML=`<div class="hint" style="margin:6px 0 4px">🏁 En iyiler</div>`+top.map(([sicil,r],i)=>`<div class="kv"><span>${["🥇","🥈","🥉","4.","5."][i]} ${ad[sicil]||sicil}</span><b>${r.dogru}/5</b></div>`).join("");
+ }catch(e){}
+}
 $("geceBtn").onclick=()=>{$("geceModal").classList.add("acik")};
 $("geceModal").onclick=()=>{$("geceModal").classList.remove("acik")};
 $("sosBtn").onclick=()=>{if(!store.personel){alert("Önce giriş yap");return}$("sosDet").textContent=`${store.personel.ad} (${store.personel.sicil}) • Görev ${store.gorevNo||"-"} — gönderilsin mi?`;$("sosModal").classList.add("acik")};
@@ -803,6 +847,7 @@ mesajKontrol();setInterval(mesajKontrol,30000);
 havaGetir();setInterval(havaGetir,30*60*1000);
 baglantiKontrol();setInterval(baglantiKontrol,60000);
 sahaGetir();setInterval(sahaGetir,5*60*1000);
+baslamaKontrol();
 if(!store.personel)$("loginModal").classList.add("acik");
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>

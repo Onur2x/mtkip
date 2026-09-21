@@ -454,8 +454,10 @@ $("ozBtn").onclick=async()=>{
  const g=await sb.from("gorev_log").select("sicil,gorevno,created_at").eq("tarih",t).order("sicil");
  if(g.error){alert(g.error.message);return}
  const m=await sb.from("mesajlar").select("sicil").eq("okundu",false).limit(200);
- const rows=(g.data||[]).map(r=>`<tr><td>${r.sicil}</td><td style="text-align:left">${ad[r.sicil]||"-"}</td><td>Görev ${r.gorevno}</td></tr>`).join("")||"<tr><td colspan=3>Kayıt yok</td></tr>";
- $("ozSonuc").innerHTML=`<p class="hint">${t} — ${g.data.length} kişi görev yüklemiş, ${(m.data||[]).length} okunmamış mesaj var</p><table><thead><tr><th>Sicil</th><th>Ad</th><th>Görev</th></tr></thead><tbody>${rows}</tbody></table>`;
+ const v=await sb.from("vardiya_baslama").select("sicil,saat").eq("tarih",t).limit(200);
+ const basladi={};(v.data||[]).forEach(x=>basladi[x.sicil]=x.saat);
+ const rows=(g.data||[]).map(r=>`<tr><td>${r.sicil}</td><td style="text-align:left">${ad[r.sicil]||"-"}</td><td>Görev ${r.gorevno}</td><td>${basladi[r.sicil]?"✅ "+String(basladi[r.sicil]).slice(0,5):"—"}</td></tr>`).join("")||"<tr><td colspan=4>Kayıt yok</td></tr>";
+ $("ozSonuc").innerHTML=`<p class="hint">${t} — ${g.data.length} kişi görev yüklemiş, ${Object.keys(basladi).length} kişi başlamış, ${(m.data||[]).length} okunmamış mesaj var</p><table><thead><tr><th>Sicil</th><th>Ad</th><th>Görev</th><th>Başladı</th></tr></thead><tbody>${rows}</tbody></table>`;
 };
 $("ayBtn").onclick=async()=>{
  if(!await _oturum()){alert("Önce yukarıdan admin girişi yap");return}
