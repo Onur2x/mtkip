@@ -222,6 +222,14 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div id="spOkuma"></div>
 </div>
 <div class="card">
+<h2>🚏 Toplu Hareket Yükle</h2>
+<p class="hint">Excel'den kopyala (satır başına: görev - saat - tip). Tip: G/giriş/+ veya C/çıkış/-</p>
+<label>Gün</label><select id="htGun" style="width:100%"><option value="1">Hafta İçi</option><option value="2">Cumartesi</option><option value="3">Pazar</option></select>
+<label>Liste</label><textarea id="htTxt" style="min-height:90px" placeholder="5&#9;06:17:27&#9;G&#10;5&#9;06:50:54&#9;C"></textarea>
+<div><button id="htOkuBtn" class="ghost">👁️ Önizle</button><button id="htEkleBtn">⬆️ Toplu Ekle</button><button id="htTemizleBtn" class="ghost">🗑️ Günü Temizle</button></div>
+<div id="htSonuc" style="margin-top:10px"></div>
+</div>
+<div class="card">
 <h2>🆘 Acil Durumlar <span style="font-size:11px">(otomatik yenilenir)</span></h2>
 <div><button id="sosYenileBtn" class="ghost">↻ Yenile</button></div>
 <table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Görev</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="sosListe"></tbody></table>
@@ -534,6 +542,39 @@ window.hSil=async id=>{
  if(!confirm("Kayıt silinsin mi?"))return;
  const{error}=await sb.from("arac_hareket").delete().eq("id",id);
  if(error)alert(error.message);else hListe();
+};
+let _htRows=[];
+$("htOkuBtn").onclick=()=>{
+ _htRows=[];const kotu=[];
+ $("htTxt").value.split(/\r?\n/).forEach((ln,i)=>{
+  ln=ln.trim();if(!ln)return;
+  const c=ln.split(/[\t;]+/).map(x=>x.trim()).filter(x=>x!=="");
+  const nums=c.filter(x=>/^\d{1,3}$/.test(x));
+  const t=c.find(x=>/\d{1,2}:\d{2}/.test(x));
+  const tipC=c.find(x=>/^(g|giriş|gir|c|çıkış|çık|cikis|\+|-|0|1)/i.test(x));
+  let tip=tipC?(/^(g|giriş|gir|\+|0)/i.test(tipC)?0:1):null;
+  const m=t?t.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/):null;
+  if(nums.length&&m&&tip!==null)_htRows.push({gorev:nums[0],saat:[m[1].padStart(2,"0"),m[2],m[3]||"00"].join(":"),tip});
+  else kotu.push(i+1);
+ });
+ $("htSonuc").innerHTML=(kotu.length?`<div class="warn">⚠️ Okunamayan satırlar: ${kotu.join(",")}</div>`:"")+(_htRows.length?`<div class="ok">✅ ${_htRows.length} kayıt hazır</div><table><thead><tr><th>Görev</th><th>Saat</th><th>Tip</th></tr></thead><tbody>`+_htRows.slice(0,50).map(r=>`<tr><td>${r.gorev}</td><td>${r.saat}</td><td>${r.tip===0?"+ Giriş":"− Çıkış"}</td></tr>`).join("")+`</tbody></table>${_htRows.length>50?`<p class="hint">...ilk 50 gösteriliyor</p>`:""}`:`<div class="warn">⚠️ Kayıt yok</div>`);
+};
+$("htEkleBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ if(!_htRows.length){alert("Önce Önizle");return}
+ if(!confirm(`${_htRows.length} kayıt eklensin mi?`))return;
+ const ttid=+$("htGun").value;
+ const rows=_htRows.map(r=>({ttid,gorevno:r.gorev,saat:r.saat,tip:r.tip}));
+ const{error}=await sb.from("arac_hareket").insert(rows);
+ if(error){alert("🔴 "+error.message);return}
+ alert(`✅ ${_htRows.length} kayıt eklendi`);_htRows=[];$("htTxt").value="";$("htSonuc").innerHTML="";hListe();
+};
+$("htTemizleBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const ttid=+$("htGun").value;
+ if(!confirm(`Gün ${ttid} için TÜM hareket kayıtları silinsin mi?`))return;
+ const{error}=await sb.from("arac_hareket").delete().eq("ttid",ttid);
+ if(error)alert("🔴 "+error.message);else{alert("Temizlendi");hListe()}
 };
 $("ozBtn").onclick=async()=>{
  if(!await _oturum()){alert("Önce yukarıdan admin girişi yap");return}
