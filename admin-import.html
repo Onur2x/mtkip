@@ -216,6 +216,11 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Mesaj</th><th>Gönderilme</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="mListe"></tbody></table>
 </div>
 <div class="card">
+<h2>📥 Gelen Kutusu (personelden)</h2>
+<div><button id="gkYenileBtn" class="ghost">↻ Yenile</button></div>
+<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Mesaj</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="gkListe"></tbody></table>
+</div>
+<div class="card">
 <h2>📢 Toplu Duyuru <span style="font-size:11px">(admin girişi gerekir)</span></h2>
 <label>Hedef</label><select id="dHedef" style="width:100%"><option value="all">Herkes</option><option value="1">Hafta İçi (1-99)</option><option value="2">Cumartesi (101-199)</option><option value="3">Pazar (201-299)</option></select>
 <label>Mesaj</label><textarea id="dTxt" style="min-height:70px" placeholder="Duyuruyu yaz..."></textarea>
@@ -390,7 +395,7 @@ $("mGonderBtn").onclick=async()=>{
 $("mYenileBtn").onclick=mListe;
 async function mListe(){
  if(!await _oturum()){alert("Önce yukarıdan admin girişi yap");return}
- const{data,error}=await sb.from("mesajlar").select("id,sicil,mesaj,okundu,okundu_at,created_at").order("created_at",{ascending:false}).limit(30);
+ const{data,error}=await sb.from("mesajlar").select("id,sicil,mesaj,okundu,okundu_at,created_at").eq("yon",0).order("created_at",{ascending:false}).limit(30);
  if(error){alert(error.message);return}
  $("mListe").innerHTML=(data||[]).map(m=>`<tr><td>${m.sicil}</td><td style="text-align:left;max-width:220px">${(m.mesaj||"").slice(0,80)}</td><td>${(m.created_at||"").slice(5,16).replace("T"," ")}</td><td>${m.okundu?"✅ "+(m.okundu_at||"").slice(5,16).replace("T"," "):"✖️"}</td><td><button class="ghost" onclick="mSil(${m.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=5>Mesaj yok</td></tr>";
 }
@@ -398,6 +403,18 @@ window.mSil=async id=>{
  if(!confirm("Mesaj silinsin mi?"))return;
  const{error}=await sb.from("mesajlar").delete().eq("id",id);
  if(error)alert(error.message);else mListe();
+};
+$("gkYenileBtn").onclick=gkListe;
+async function gkListe(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const p=await sb.from("personel").select("sicil,ad");const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
+ const{data,error}=await sb.from("mesajlar").select("id,sicil,mesaj,created_at").eq("yon",1).order("created_at",{ascending:false}).limit(30);
+ if(error){alert(error.message);return}
+ $("gkListe").innerHTML=(data||[]).map(m=>`<tr><td>${m.sicil}<br><small>${ad[m.sicil]||""}</small></td><td style="text-align:left;max-width:200px">${(m.mesaj||"").slice(0,120)}</td><td>${(m.created_at||"").slice(5,16).replace("T"," ")}</td><td><button class="ghost" onclick="gkYanıt('${m.sicil}')">Yanıtla</button> <button class="ghost" onclick="mSil(${m.id});setTimeout(gkListe,500)">Sil</button></td></tr>`).join("")||"<tr><td colspan=4>Mesaj yok ✅</td></tr>";
+}
+window.gkYanıt=sicil=>{
+ $("mSicil").value=sicil;$("mTxt").focus();
+ document.querySelectorAll(".wrap>.card")[3].scrollIntoView({behavior:"smooth"});
 };
 $("dGonderBtn").onclick=async()=>{
  if(!await _oturum()){alert("Önce yukarıdan admin girişi yap");return}

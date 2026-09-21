@@ -274,6 +274,11 @@ button:active::after{animation:ripple .55s}
 <div class="btnrow"><button id="tkGonderBtn">Gönder</button></div>
 <div id="tkListe"></div>
 </div>
+<div class="card"><h3>✉️ YÖNETİME YAZ</h3>
+<label>Mesajın</label><textarea id="admMsgTxt" style="min-height:70px" placeholder="Yönetime iletmek istediğin..."></textarea>
+<div class="btnrow"><button id="admMsgBtn">📤 Gönder</button></div>
+<div id="admMsgListe"></div>
+</div>
 <div class="card"><h3>📝 BİLGİ TESTİ</h3><div id="quizAlan"><div class="btnrow"><button id="quizBaslaBtn">▶️ Başla (5 soru)</button></div></div><div id="quizSonuc" class="hint"></div><div id="liderListe" style="margin-top:8px"></div></div>
 </section>
 <!-- AYARLAR -->
@@ -370,7 +375,7 @@ async function mesajKontrol(){
  try{
   const sb=sbClient();if(!sb||!store.personel||!store.personel.sicil)return;
   // 1) kişisel mesaj
-  const{data,error}=await sb.from("mesajlar").select("id,mesaj").eq("sicil",String(store.personel.sicil)).eq("okundu",false).order("created_at",{ascending:false}).limit(1);
+  const{data,error}=await sb.from("mesajlar").select("id,mesaj").eq("sicil",String(store.personel.sicil)).eq("yon",0).eq("okundu",false).order("created_at",{ascending:false}).limit(1);
   if(!error&&data&&data.length){
    const m=data[0],k="k"+m.id;
    if(!(k===_sonMsgId&&$("msgModal").classList.contains("acik"))){
@@ -808,7 +813,24 @@ window.quizCevap=async i=>{
  $("quizSonuc").textContent=`✅ ${_qd} doğru, ❌ ${_qy} yanlış`;
  try{const sb=sbClient();if(sb&&store.personel)await sb.from("sinav_sonuc").insert({sicil:String(store.personel.sicil),dogru:_qd,yanlis:_qy})}catch(e){}
 };
-function kurumsalYenile(){talimatGetir();dokGetir();takasListe();liderGetir();}
+function kurumsalYenile(){talimatGetir();dokGetir();takasListe();liderGetir();admGelenListe();}
+$("admMsgBtn").onclick=async()=>{
+ try{
+  const sb=sbClient();if(!sb||!store.personel){alert("Önce giriş yap");return}
+  const m=$("admMsgTxt").value.trim();if(!m){alert("Mesaj yaz");return}
+  const{error}=await sb.from("mesajlar").insert({sicil:String(store.personel.sicil),mesaj:m,yon:1});
+  if(error){alert("🔴 "+error.message);return}
+  $("admMsgTxt").value="";alert("Gönderildi ✅");admGelenListe();
+ }catch(e){}
+};
+async function admGelenListe(){
+ try{
+  const sb=sbClient();if(!sb||!store.personel)return;
+  const{data}=await sb.from("mesajlar").select("mesaj,created_at").eq("sicil",String(store.personel.sicil)).eq("yon",1).order("created_at",{ascending:false}).limit(5);
+  const el=$("admMsgListe");if(!el)return;
+  el.innerHTML=(data||[]).length?(data||[]).map(r=>`<div class="kv"><span style="text-align:left">${(r.mesaj||"").slice(0,60)}</span><b>${(r.created_at||"").slice(5,16).replace("T"," ")}</b></div>`).join(""):'<p class="hint">Gönderdiğin mesaj yok</p>';
+ }catch(e){}
+}
 async function liderGetir(){
  try{
   const sb=sbClient();if(!sb)return;
