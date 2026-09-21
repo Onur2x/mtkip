@@ -460,7 +460,7 @@ async function logGorev(){
 function geceMi(){const h=new Date().getHours();return h>=22||h<6}
 function efektTema(){return(store.otoGece!==false&&geceMi())?"gece":(store.tema||"gece")}
 function applyTheme(){const t=efektTema();document.body.setAttribute("data-theme",t);document.querySelector('meta[name="theme-color"]').content=TEMALAR.find(x=>x.id===t)?.c||"#0f172a";
- const w=$("themes");w.innerHTML="";TEMALAR.forEach(t=>{const b=document.createElement("button");b.className="theme"+(t.id===store.tema?" on":"");b.innerHTML=`<span class="dot" style="background:${t.c};border:1px solid #888"></span>${t.ad}`;b.onclick=()=>{store.tema=t.id;persist();applyTheme()};w.appendChild(b)})}
+ const w=$("themes");w.innerHTML="";TEMALAR.forEach(t=>{const b=document.createElement("button");b.className="theme"+(t.id===store.tema?" on":"");b.innerHTML=`<span class="dot" style="background:${t.c};border:1px solid #888"></span>${t.ad}`;b.onclick=()=>{store.tema=t.id;store.otoGece=false;const o=$("inOtoGece");if(o)o.checked=false;persist();applyTheme()};w.appendChild(b)})}
 function persist(){try{const s={...store};delete s.alarmOzel;delete s.mesajOzel;localStorage.setItem("trenStore2",JSON.stringify(s))}catch(e){alert("Ayar kaydedilemedi (hafıza dolu olabilir)")}}
 // özel sesler IndexedDB'de (localStorage kotasını şişirmesin diye)
 function _idb(){return new Promise((res,rej)=>{try{const q=indexedDB.open("m8ses",1);q.onupgradeneeded=()=>q.result.createObjectStore("s");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}})}
