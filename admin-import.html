@@ -22,6 +22,16 @@ th{background:#1e293b;color:#93a3b8}
 .warn{background:#451a03;border:1px solid #f59e0b;border-radius:12px;padding:10px;margin:8px 0;font-size:13px}
 .ok{background:#052e16;border:1px solid #22c55e;border-radius:12px;padding:10px;margin:8px 0;font-size:13px}
 .hint{font-size:12px;color:#93a3b8;line-height:1.7}
+body{counter-reset:admsec}
+.anav{position:sticky;top:0;z-index:60;background:rgba(11,18,32,.94);backdrop-filter:blur(10px);padding:10px 4px;border-bottom:1px solid #334155;display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding-left:14px;padding-right:14px}
+.anav button{flex:0 0 auto;font-size:12px;padding:8px 12px;margin:0;border-radius:99px;white-space:nowrap}
+.card h2::before{counter-increment:admsec;content:counter(admsec,decimal-leading-zero);display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#22c55e;color:#052e16;font-size:13px;margin-right:8px}
+.card{box-shadow:0 8px 24px rgba(0,0,0,.35)}
+table{font-variant-numeric:tabular-nums}
+tbody tr:nth-child(even){background:rgba(255,255,255,.03)}
+input:focus,textarea:focus,select:focus{outline:2px solid #22c55e;border-color:#22c55e}
+#topBtn{display:none;position:fixed;right:14px;bottom:14px;z-index:70;width:48px;height:48px;border-radius:99px;font-size:20px;padding:0}
+#topBtn.goster{display:block}
 #kilit{position:fixed;inset:0;background:#0b1220;z-index:99;display:grid;place-items:center;padding:20px}
 #kilit .card{width:100%;max-width:340px;text-align:center}
 body.kilitli .wrap{display:none}
@@ -41,6 +51,7 @@ body.kilitli .wrap{display:none}
 </div>
 <div class="wrap">
 <h1>🔒 Admin İçe Aktarma <button id="kCikisBtn" class="ghost" style="font-size:12px;padding:6px 10px">🚪 Çıkış</button><br><span style="font-size:12px;color:#93a3b8">(personelle paylaşılmaz)</span></h1>
+<nav class="anav" id="anav"></nav>
 <p class="hint">Excel'den kopyala → aşağıya yapıştır → <b>SQL Üret</b> → çıkan SQL'i Supabase &gt; SQL Editor'de çalıştır.<br>
 Eşleşme: her PAR'a kendinden sonraki ilk BOS verilir (en fazla 3 saat içinde). Eşleşmeyen PAR/BOS uyarı olarak listelenir. Gece yarısı (00:xx) saatler en sona alınır. Tur süresi 51 dk sabit.<br>
 Dinlenme formülü: <b>sonraki PAR − (BOS + (BOS − PAR))</b> → yukarı yuvarlanır. Örn: PAR 07:29, BOS 07:56, sonraki 08:45 → 08:45 − (07:56+27) = 22 dk. Son turun dinlenmesi 0 yazılır.<br>
@@ -276,6 +287,14 @@ $("kBtn").onclick=async()=>{
  $("kDurum").textContent="";kilitKontrol();liste();
 };
 $("kCikisBtn").onclick=async()=>{await sb.auth.signOut();location.reload()};
+(function(){
+ const sekmeler=[["📥 Veri",0],["👥 Kadro",2],["💬 Mesaj",3],["📢 Duyuru",4],["🕵️ Panel",6],["🆘 SOS",7],["📊 Rapor",12],["📚 İçerik",9]];
+ const nav=$("anav");if(!nav)return;
+ sekmeler.forEach(([ad,i])=>{const b=document.createElement("button");b.className="ghost";b.textContent=ad;b.onclick=()=>{const c=document.querySelectorAll(".wrap>.card")[i];if(c)c.scrollIntoView({behavior:"smooth",block:"start"})};nav.appendChild(b)});
+ const top=$("topBtn");
+ window.addEventListener("scroll",()=>{top.classList.toggle("goster",window.scrollY>600)},{passive:true});
+ top.onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
+})();
 window._kilitAcik=kilitAcikMi;
 $("admLoginBtn").onclick=async()=>{
  const {error}=await sb.auth.signInWithPassword({email:$("admMail").value.trim(),password:$("admPass").value});
@@ -544,5 +563,6 @@ $("ayBtn").onclick=async()=>{
  $("ayDurum").textContent=`✅ ${g.data.length} satır indirildi — Excel ile açılır`;
 };
 </script>
+<button id="topBtn" class="ghost">⬆️</button>
 </body>
 </html>
