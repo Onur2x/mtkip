@@ -94,19 +94,21 @@ function parse(txt,mod){
  });
  return{out,bad};
 }
-let _imp=null;const _art=new Set(),_ipt=new Set();
+let _imp=null;const _art=new Set(),_ipt=new Set(),_ktr=new Set();
 function artKey(g,run){return g+":"+run}
 window.artDegis=(g,run,el)=>{const k=artKey(g,run);if(el.checked)_art.add(k);else _art.delete(k);sqlKur()};
 window.iptDegis=(g,run,el)=>{const k=artKey(g,run);if(el.checked)_ipt.add(k);else _ipt.delete(k);sqlKur()};
+window.ktrDegis=(g,run,el)=>{const k=artKey(g,run);if(el.checked)_ktr.add(k);else _ktr.delete(k);sqlKur()};
 function sqlKur(){
  if(!_imp)return;
  const{ttid,items,gunAd}=_imp;
  const vals=items.map(it=>{
   const a=_art.has(artKey(it.g,it.run))?"true":"false";
   const x=_ipt.has(artKey(it.g,it.run))?"true":"false";
-  return `(${ttid},'${it.g}',${it.run},${it.yon},'${it.saat}',${it.din},51,${a},${x})`;
+  const k=_ktr.has(artKey(it.g,it.run))?"true":"false";
+  return `(${ttid},'${it.g}',${it.run},${it.yon},'${it.saat}',${it.din},51,${a},${x},${k})`;
  });
- const sql=`-- ${gunAd} — ${items.length/2} tur\ndelete from public.timetable_rows where ttid = ${ttid};\ninsert into public.timetable_rows (ttid,gorevno,run,yon,saat,dinlenme_dk,tur_suresi_dk,artirim,iptal) values\n`+vals.join(",\n")+`\non conflict (ttid,gorevno,run,yon) do update set saat=excluded.saat, dinlenme_dk=excluded.dinlenme_dk, tur_suresi_dk=excluded.tur_suresi_dk, artirim=excluded.artirim, iptal=excluded.iptal;`;
+ const sql=`-- ${gunAd} — ${items.length/2} tur\ndelete from public.timetable_rows where ttid = ${ttid};\ninsert into public.timetable_rows (ttid,gorevno,run,yon,saat,dinlenme_dk,tur_suresi_dk,artirim,iptal,kontrol) values\n`+vals.join(",\n")+`\non conflict (ttid,gorevno,run,yon) do update set saat=excluded.saat, dinlenme_dk=excluded.dinlenme_dk, tur_suresi_dk=excluded.tur_suresi_dk, artirim=excluded.artirim, iptal=excluded.iptal, kontrol=excluded.kontrol;`;
  $("sqlTxt").value=vals.length?sql:"";
 }
 $("uretBtn").onclick=async()=>{
@@ -119,7 +121,7 @@ $("uretBtn").onclick=async()=>{
  [...parM.values()].forEach(a=>a.sort((x,y)=>sn(x)-sn(y)));[...bosM.values()].forEach(a=>a.sort((x,y)=>sn(x)-sn(y)));
   const gorevler=[...new Set([...parM.keys(),...bosM.keys()])].sort((a,b)=>a-b);
   let html="",warn=[],items=[],toplam=0;
-  html+=`<table><thead><tr><th>➕</th><th>❌</th><th>Görev</th><th>Run</th><th>PAR</th><th>BOS</th><th>Seyahat</th><th>Dinlenme</th></tr></thead><tbody>`;
+  html+=`<table><thead><tr><th>➕</th><th>❌</th><th>🔍</th><th>Görev</th><th>Run</th><th>PAR</th><th>BOS</th><th>Seyahat</th><th>Dinlenme</th></tr></thead><tbody>`;
   gorevler.forEach(g=>{
   // akıllı eşleşme: her PAR'a kendinden sonraki ilk BOS (en fazla 3 saat içinde)
   const P0=[...(parM.get(g)||[])].sort((x,y)=>sn(x)-sn(y));
@@ -142,17 +144,17 @@ $("uretBtn").onclick=async()=>{
     dinGoster=String(din);
     if(din<0)warn.push(`Görev ${g} run ${i+1}: dinlenme negatif (${din} dk) — saatleri kontrol et`);}
    if(sey<5||sey>90)warn.push(`Görev ${g} run ${i+1}: seyahat ${sey} dk — kontrol et (${k1} → ${k2})`);
-   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${i+1},this)"></td><td><input type="checkbox" style="width:20px" onchange="iptDegis('${g}',${i+1},this)"></td><td>${g}</td><td>${i+1}</td><td>${k1}</td><td>${k2}</td><td>${sey}'</td><td>${dinGoster}'</td></tr>`;
+   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${i+1},this)"></td><td><input type="checkbox" style="width:20px" onchange="iptDegis('${g}',${i+1},this)"></td><td><input type="checkbox" style="width:20px" onchange="ktrDegis('${g}',${i+1},this)"></td><td>${g}</td><td>${i+1}</td><td>${k1}</td><td>${k2}</td><td>${sey}'</td><td>${dinGoster}'</td></tr>`;
    items.push({g,run:i+1,yon:0,saat:k1,din},{g,run:i+1,yon:1,saat:k2,din});
    toplam++;
   });
   // tek yönlüler: çift kayıt çakışmasın diye 500+ run
   parSolo.forEach((k1,j)=>{
-   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${500+j},this)"></td><td><input type="checkbox" style="width:20px" onchange="iptDegis('${g}',${500+j},this)"></td><td>${g}</td><td>tek</td><td>${k1}</td><td>—</td><td>—</td><td>–</td></tr>`;
+   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${500+j},this)"></td><td><input type="checkbox" style="width:20px" onchange="iptDegis('${g}',${500+j},this)"></td><td><input type="checkbox" style="width:20px" onchange="ktrDegis('${g}',${500+j},this)"></td><td>${g}</td><td>tek</td><td>${k1}</td><td>—</td><td>—</td><td>–</td></tr>`;
    items.push({g,run:500+j,yon:0,saat:k1,din:0});toplam++;
   });
   B0.forEach((k2,j)=>{
-   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${600+j},this)"></td><td><input type="checkbox" style="width:20px" onchange="iptDegis('${g}',${600+j},this)"></td><td>${g}</td><td>tek</td><td>—</td><td>${k2}</td><td>—</td><td>–</td></tr>`;
+   html+=`<tr><td><input type="checkbox" style="width:20px" onchange="artDegis('${g}',${600+j},this)"></td><td><input type="checkbox" style="width:20px" onchange="iptDegis('${g}',${600+j},this)"></td><td><input type="checkbox" style="width:20px" onchange="ktrDegis('${g}',${600+j},this)"></td><td>${g}</td><td>tek</td><td>—</td><td>${k2}</td><td>—</td><td>–</td></tr>`;
    items.push({g,run:600+j,yon:1,saat:k2,din:0});toplam++;
   });
  });
@@ -183,7 +185,7 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div id="admPanel" style="display:none">
 <label>Sicil</label><input id="pSicil" inputmode="numeric" autocomplete="off" placeholder="örn 5771">
 <label>Ad Soyad</label><input id="pAd" autocomplete="off" placeholder="Ad SOYAD">
-<div><button id="pEkleBtn">➕ Ekle / Güncelle</button><button id="pYenileBtn" class="ghost">↻ Listele</button></div>
+<div><button id="pEkleBtn">➕ Ekle</button><button id="pYenileBtn" class="ghost">↻ Listele</button></div>
 <table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Ad</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="pListe"></tbody></table>
 </div>
 </div>
@@ -320,7 +322,9 @@ $("pYenileBtn").onclick=liste;
 $("pEkleBtn").onclick=async()=>{
  const sicil=$("pSicil").value.trim(),ad=$("pAd").value.trim();
  if(!sicil||!ad){alert("Sicil ve ad gerekli");return}
- const {error}=await sb.from("personel").upsert({sicil,ad,aktif:true},{onConflict:"sicil"});
+ const var1=await sb.from("personel").select("sicil").eq("sicil",sicil).maybeSingle();
+ if(var1.data){alert("Bu sicil zaten kayıtlı — değiştirmek için önce Sil");return}
+ const{error}=await sb.from("personel").insert({sicil,ad,aktif:true});
  if(error){alert("🔴 "+error.message);return}
  $("pSicil").value="";$("pAd").value="";liste();
 };

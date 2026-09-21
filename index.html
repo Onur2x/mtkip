@@ -224,7 +224,7 @@ button:active::after{animation:ripple .55s}
 <div class="hint" id="kullaniciTxt" style="margin:0 2px 8px"></div>
 <div class="count-card" id="sayacKart">
 <div class="gorev-buyuk">GÖREV <span id="gorevBuyuk">-</span></div>
-<div class="next-time">🚏 PAR <span id="sonrakiTxt">-</span> • <span id="turNo">-</span>. tur</div>
+<div class="next-time">🚏 PAR <span id="sonrakiTxt">-</span> • <span id="turNo">-</span>. tur<span id="turKontrol"></span></div>
 <div class="chrono" id="geriSayim">--:--:--</div>
 <div class="bar" id="progWrap"><div id="progBar"></div></div>
 </div>
@@ -557,9 +557,10 @@ function rowsToTurlar(rows){
   else{o.k2=r.saat.slice(0,8);o.t=r.tur_suresi_dk??o.t??51}
   if(r.artirim)o.art=true;
   if(r.iptal)o.ipt=true;
+  if(r.kontrol)o.ktr=true;
   o.d=r.dinlenme_dk??o.d??0;o.t=r.tur_suresi_dk??o.t??51;o.run=r.run});
  const tkey=o=>{const t=o.k1||o.k2;const[a,b,c]=t.split(":").map(Number);let s=a*3600+b*60+(c||0);if(!o.k1&&s<3*3600)s+=86400;return s};
- return [...m.values()].map(o=>({run:o.run,d:o.d??0,k1:o.k1||null,k2:o.k2||null,t:o.t??51,art:!!o.art,ipt:!!o.ipt}))
+ return [...m.values()].map(o=>({run:o.run,d:o.d??0,k1:o.k1||null,k2:o.k2||null,t:o.t??51,art:!!o.art,ipt:!!o.ipt,ktr:!!o.ktr}))
   .filter(x=>x.k1||x.k2)
   .sort((a,b)=>tkey(a)-tkey(b));
 }
@@ -569,7 +570,7 @@ async function sbLoadRows(){const sb=sbClient();if(!sb)return;
  store.grupId=gorevToGrup(store.gorevNo);
  $("bGorev").textContent=store.gorevNo;
  sbDurumYaz("⏳ Yükleniyor...");
- const {data,error}=await sb.from("timetable_rows").select("run,yon,saat,dinlenme_dk,tur_suresi_dk,artirim,iptal").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).order("run").order("yon");
+ const {data,error}=await sb.from("timetable_rows").select("run,yon,saat,dinlenme_dk,tur_suresi_dk,artirim,iptal,kontrol").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).order("run").order("yon");
  if(error){sbDurumYaz("🔴 Hata: "+error.message);return}
  const turlar=rowsToTurlar(data||[]);
  try{
@@ -607,7 +608,7 @@ function render(){
   const tip=m1?hz[r.k1.slice(0,8)]:m2?hz[r.k2.slice(0,8)]:null;
   const roz=tip===0?`<br><span class="hz hz-g">+ GİRİŞ</span>`:tip===1?`<br><span class="hz hz-c">− ÇIKIŞ</span>`:"";
   const k1=(r.k1?r.k1.slice(0,5):"—")+(m1?roz:""),k2=(r.k2?r.k2.slice(0,5):"—")+(m2?roz:"");
-  const tur=r.ipt?`❌`:r.art?`${r.t}' ➕`:`${r.t}'`;
+  const tur=r.ipt?`❌`:`${r.t}'${r.art?" ➕":""}${r.ktr?" 🔍":""}`;
   if(r.ipt)tr.classList.add("iptal");
   tr.innerHTML=`<td>${r.d}</td><td>${k1}</td><td>${k2}</td><td title="${r.art?"Ek sefer (artırım)":""}">${tur}</td>`;tb.appendChild(tr)});
  const top=store.veri.filter(r=>!r.ipt).reduce((a,r)=>a+(+r.t||0),0);
@@ -635,7 +636,7 @@ function tick(){
   if(next){
    // Moladaysa sıradaki tur komple yeşil (row-now), seferdeyse sıradaki outline (row-next)
    $("s"+next.i)?.classList.add(aktif0>=0?"row-next":"row-now");
-  $("sonrakiTxt").textContent=next.r.k1;$("turNo").textContent=next.p+1;
+  $("sonrakiTxt").textContent=next.r.k1;$("turNo").textContent=next.p+1;$("turKontrol").textContent=next.r.ktr?" 🔍":"";
   $("bittiKarti").style.display="none";
   const ms=next.t-now,dk=ms/60000,s=Math.floor(ms/1000);
   const hh=String(Math.floor(s/3600)).padStart(2,"0"),mm=String(Math.floor(s%3600/60)).padStart(2,"0"),ss=String(s%60).padStart(2,"0");
@@ -667,19 +668,19 @@ function tick(){
   $("bDurum").textContent=aktif>=0?`🚄 Seferde (${aktif+1}. tur)`:`☕ Hazırlık / Mola`;
   const key=next.i+"_"+next.r.k1;
   if(dk<=store.uyariDk&&dk>0&&!warned.has(key)){
-   const bn=$("banner");bn.style.display="block";bn.textContent=`⚠️ ${next.r.k1} PAR kalkışına ${Math.ceil(dk)} dk kaldı! (${next.p+1}. tur)`;
+   const bn=$("banner");bn.style.display="block";bn.textContent=`⚠️ ${next.r.k1} PAR kalkışına ${Math.ceil(dk)} dk kaldı! (${next.p+1}. tur${next.r.ktr?" 🔍":""})`;
    notify("Kalkış Uyarısı",`${next.r.k1} kalkışına ${Math.ceil(dk)} dk kaldı`);
-   alarmBaslat(key,`🚏 PAR ${next.r.k1} • ${next.p+1}. tur • ${Math.ceil(dk)} dk kaldı`);
+   alarmBaslat(key,`🚏 PAR ${next.r.k1} • ${next.p+1}. tur${next.r.ktr?" 🔍 HAT KONTROLÜ":""} • ${Math.ceil(dk)} dk kaldı`);
    setTimeout(()=>{if(!alarmAktif)bn.style.display="none"},90000);}
   yerelAlarmKur(next);hazirlikKur();
  }else{
   if(!store.veri.length){
-   $("geriSayim").textContent="--:--:--";$("geriSayim").classList.remove("kritik");$("yapbar").classList.remove("goster");$("sonrakiTxt").textContent="Görev No girin";$("turNo").textContent="-";
+   $("geriSayim").textContent="--:--:--";$("geriSayim").classList.remove("kritik");$("yapbar").classList.remove("goster");$("sonrakiTxt").textContent="Görev No girin";$("turNo").textContent="-";$("turKontrol").textContent="";
    $("progBar").style.width="0%";$("bittiKarti").style.display="none";
    $("mTur").textContent="-/-";$("mKalan").textContent="-";$("mTamam").textContent=tamam;
    $("bKalan").textContent="-";$("bTamam").textContent=tamam;$("bSonraki").textContent="—";$("bDurum").textContent="⌨️ Görev bekleniyor";
   }  else{
-  $("geriSayim").textContent="00:00:00";$("geriSayim").classList.remove("kritik");$("yapbar").classList.remove("goster");$("sonrakiTxt").textContent="—";$("turNo").textContent="—";
+  $("geriSayim").textContent="00:00:00";$("geriSayim").classList.remove("kritik");$("yapbar").classList.remove("goster");$("sonrakiTxt").textContent="—";$("turNo").textContent="—";$("turKontrol").textContent="";
   $("progBar").style.width="100%";
   $("bittiKarti").style.display="block";
   $("mTur").textContent=V.length+"/"+V.length;$("mKalan").textContent=0;$("mTamam").textContent=tamam;
