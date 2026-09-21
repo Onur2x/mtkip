@@ -200,6 +200,17 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <table style="margin-top:10px"><thead><tr><th>Görev</th><th>Saat</th><th>Tip</th><th>İşlem</th></tr></thead><tbody id="hListe"></tbody></table>
 </div>
 <div class="card">
+<h2>🕵️ Süper Panel — her şey burada</h2>
+<div><button id="spYenileBtn">↻ Yenile</button> <span class="hint" id="spDurum"></span></div>
+<div id="spOzet" style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0"></div>
+<label>Kişi seç (detay)</label><select id="spKisi" style="width:100%"><option value="">—</option></select>
+<div id="spKisiDetay" style="margin-top:8px"></div>
+<h2 style="margin-top:14px">Son hareketler</h2>
+<div id="spZaman"></div>
+<h2 style="margin-top:14px">Okumayanlar (son duyuru + talimatlar)</h2>
+<div id="spOkuma"></div>
+</div>
+<div class="card">
 <h2>🆘 Acil Durumlar <span style="font-size:11px">(otomatik yenilenir)</span></h2>
 <div><button id="sosYenileBtn" class="ghost">↻ Yenile</button></div>
 <table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Görev</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="sosListe"></tbody></table>
@@ -357,6 +368,65 @@ window.sosSil=async id=>{
  if(error)alert(error.message);else sosListe();
 };
 setInterval(()=>sosListe(true),30000);
+const chip=t=>`<span style="background:#1e293b;border:1px solid #334155;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:800">${t}</span>`;
+$("spYenileBtn").onclick=()=>spYenile(false);
+setInterval(()=>{if(!document.body.classList.contains("kilitli"))spYenile(true)},60000);
+async function spYenile(sessiz){
+ if(!await _oturum()){if(!sessiz)alert("Önce giriş yap");return}
+ $("spDurum").textContent="⏳ ...";
+ const bugunTr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+ const T=bugunTr();
+ try{
+  const p=await sb.from("personel").select("sicil,ad,aktif").order("sicil");
+  const per=(p.data||[]),ad={};per.forEach(x=>ad[x.sicil]=x.ad);
+  const aktif=per.filter(x=>x.aktif!==false);
+  const g=await sb.from("gorev_log").select("sicil,gorevno,tarih,created_at").order("created_at",{ascending:false}).limit(400);
+  const gl=g.data||[];
+  const bugun=gl.filter(r=>r.tarih===T);
+  const v=await sb.from("vardiya_baslama").select("sicil,saat").eq("tarih",T).limit(200);
+  const basl=new Set((v.data||[]).map(r=>r.sicil));
+  const m=await sb.from("mesajlar").select("id,sicil,okundu").order("created_at",{ascending:false}).limit(100);
+  const okunmamis=(m.data||[]).filter(r=>!r.okundu).length;
+  const tk=await sb.from("takas").select("id").eq("durum","bekliyor").limit(100);
+  const s=await sb.from("sos").select("id").gte("created_at",T+"T00:00:00").limit(50);
+  $("spOzet").innerHTML=chip(`👥 ${aktif.length} personel`)+chip(`🟢 Bugün aktif: ${new Set(bugun.map(r=>r.sicil)).size}`)+chip(`✅ Başlayan: ${basl.size}`)+chip(`✖️ Okunmamış mesaj: ${okunmamis}`)+chip(`⏳ Takas: ${(tk.data||[]).length}`)+chip(`🆘 SOS: ${(s.data||[]).length}`);
+  const sel=$("spKisi"),onceki=sel.value;
+  sel.innerHTML=`<option value="">—</option>`+aktif.map(x=>`<option value="${x.sicil}">${x.sicil} - ${x.ad}</option>`).join("");
+  if(onceki)sel.value=onceki;
+  window._adM=ad;spKisiDetay(ad);
+  const ev=[];
+  (s.data||[]).forEach(r=>ev.push({z:"bugün",t:"🆘 SOS",k:"-"}));
+  (m.data||[]).slice(0,15).forEach(r=>ev.push({z:(r.created_at||"").slice(5,16).replace("T"," "),t:(r.okundu?"✅":"✖️")+" mesaj → "+r.sicil,k:r.sicil}));
+  gl.slice(0,20).forEach(r=>ev.push({z:(r.created_at||"").slice(5,16).replace("T"," "),t:`📥 ${r.sicil} görev ${r.gorevno}`,k:r.sicil}));
+  ev.sort((a,b)=>a.z<b.z?1:-1);
+  $("spZaman").innerHTML=`<table><thead><tr><th>Zaman</th><th>Olay</th></tr></thead><tbody>`+ev.slice(0,25).map(e=>`<tr><td>${e.z}</td><td style="text-align:left">${e.t}</td></tr>`).join("")+`</tbody></table>`;
+  const d=await sb.from("duyurular").select("id,mesaj").order("created_at",{ascending:false}).limit(1);
+  const o=await sb.from("duyuru_okuma").select("duyuru_id,sicil").limit(2000);
+  const t=await sb.from("talimatlar").select("id,baslik").eq("aktif",true).limit(20);
+  const to=await sb.from("talimat_okuma").select("talimat_id,sicil").limit(2000);
+  let oh="";
+  if(d.data&&d.data.length){const okS=new Set(o.data.filter(x=>x.duyuru_id===d.data[0].id).map(x=>x.sicil));const yok=aktif.filter(x=>!okS.has(x.sicil));oh+=`<p class="hint">📢 "${(d.data[0].mesaj||"").slice(0,60)}" — okumayan (${yok.length}): ${yok.slice(0,15).map(x=>x.sicil).join(", ")||"yok ✅"}${yok.length>15?"...":""}</p>`}
+  (t.data||[]).slice(0,5).forEach(x=>{const okS=new Set(to.data.filter(r=>r.talimat_id===x.id).map(r=>r.sicil));const yok=aktif.filter(p2=>!okS.has(p2.sicil));oh+=`<p class="hint">📋 ${x.baslik} — okumayan (${yok.length}): ${yok.slice(0,15).map(p2=>p2.sicil).join(", ")||"yok ✅"}${yok.length>15?"...":""}</p>`});
+  $("spOkuma").innerHTML=oh||'<p class="hint">Veri yok</p>';
+  $("spDurum").textContent="✅ "+new Date().toLocaleTimeString("tr-TR");
+ }catch(e){$("spDurum").textContent="🔴 "+e.message}
+}
+$("spKisi").onchange=()=>spKisiDetay(window._adM);
+async function spKisiDetay(adMap){
+ const sicil=$("spKisi").value,el=$("spKisiDetay");
+ if(!sicil){if(el)el.innerHTML="";return}
+ try{
+  const g=await sb.from("gorev_log").select("tarih,gorevno").eq("sicil",sicil).order("tarih",{ascending:false}).limit(14);
+  const v=await sb.from("vardiya_baslama").select("tarih,saat").eq("sicil",sicil).order("tarih",{ascending:false}).limit(14);
+  const bmap={};(v.data||[]).forEach(x=>bmap[x.tarih]=x.saat);
+  const m=await sb.from("mesajlar").select("mesaj,okundu,created_at").eq("sicil",sicil).order("created_at",{ascending:false}).limit(5);
+  const q=await sb.from("sinav_sonuc").select("dogru,yanlis,created_at").eq("sicil",sicil).order("created_at",{ascending:false}).limit(5);
+  const ad=(adMap&&adMap[sicil])||sicil;
+  el.innerHTML=`<p class="hint"><b>${ad} (${sicil})</b></p><table><thead><tr><th>Tarih</th><th>Görev</th><th>Başladı</th></tr></thead><tbody>`+((g.data||[]).map(r=>`<tr><td>${r.tarih}</td><td>${r.gorevno}</td><td>${bmap[r.tarih]?String(bmap[r.tarih]).slice(0,5):"—"}</td></tr>`).join("")||"<tr><td colspan=3>Kayıt yok</td></tr>")+`</tbody></table>`
+  +`<p class="hint">Son mesajlar: `+((m.data||[]).map(r=>`${r.okundu?"✅":"✖️"} ${(r.mesaj||"").slice(0,40)}`).join(" • ")||"yok")+`</p>`
+  +`<p class="hint">Son testler: `+((q.data||[]).map(r=>`${r.dogru}/5`).join(", ")||"yok")+`</p>`;
+ }catch(e){}
+}
 $("tEkleBtn").onclick=async()=>{
  if(!await _oturum()){alert("Önce giriş yap");return}
  const baslik=$("tBaslik").value.trim(),icerik=$("tIcerik").value.trim();
