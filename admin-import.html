@@ -25,6 +25,7 @@ th{background:#1e293b;color:#93a3b8}
 body{counter-reset:admsec}
 .anav{position:sticky;top:0;z-index:60;background:rgba(11,18,32,.94);backdrop-filter:blur(10px);padding:10px 4px;border-bottom:1px solid #334155;display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding-left:14px;padding-right:14px}
 .anav button{flex:0 0 auto;font-size:12px;padding:8px 12px;margin:0;border-radius:99px;white-space:nowrap}
+.anav button.on{background:#22c55e;color:#052e16;border:none}
 .card h2::before{counter-increment:admsec;content:counter(admsec,decimal-leading-zero);display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#22c55e;color:#052e16;font-size:13px;margin-right:8px}
 .card{box-shadow:0 8px 24px rgba(0,0,0,.35)}
 table{font-variant-numeric:tabular-nums}
@@ -32,6 +33,22 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.03)}
 input:focus,textarea:focus,select:focus{outline:2px solid #22c55e;border-color:#22c55e}
 #topBtn{display:none;position:fixed;right:14px;bottom:14px;z-index:70;width:48px;height:48px;border-radius:99px;font-size:20px;padding:0}
 #topBtn.goster{display:block}
+.ahead{background:linear-gradient(135deg,#0c4a6e,#155e75);border:1px solid #334155;border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;margin:14px 0 4px;box-shadow:0 10px 28px rgba(0,0,0,.4)}
+.ahead .logo{width:48px;height:48px;font-size:28px;background:rgba(255,255,255,.12);border-radius:14px;display:grid;place-items:center}
+.ahead b{font-size:17px;display:block}
+.ahead span{font-size:12px;color:#bae6fd}
+.ahead button{margin-left:auto;flex:0 0 auto}
+button[onclick*="il("]{background:transparent;border:1px solid #7f1d1d;color:#fca5a5;box-shadow:none}
+button[onclick*="il("]:hover{background:#7f1d1d;color:#fff}
+.card{overflow-x:auto}
+table{min-width:480px}
+tbody tr:hover{background:rgba(34,197,94,.07)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:800}
+.pill.ok{background:rgba(34,197,94,.18);color:#4ade80}
+.pill.no{background:rgba(239,68,68,.18);color:#f87171}
+.pill.warn{background:rgba(245,158,11,.18);color:#fbbf24}
+#kilit .card{background:linear-gradient(160deg,#16233f,#0c4a6e)}
+#kilit .logo{width:64px;height:64px;font-size:38px;background:rgba(255,255,255,.1);border-radius:18px;display:grid;place-items:center;margin:0 auto 10px}
 #kilit{position:fixed;inset:0;background:#0b1220;z-index:99;display:grid;place-items:center;padding:20px}
 #kilit .card{width:100%;max-width:340px;text-align:center}
 body.kilitli .wrap{display:none}
@@ -40,7 +57,8 @@ body.kilitli .wrap{display:none}
 <body class="kilitli">
 <div id="kilit">
 <div class="card">
-<h2>🔒 Admin Girişi</h2>
+<div class="logo">🔒</div>
+<h2>Admin Girişi</h2>
 <p class="hint">Bu sayfa kilitli — sadece yetkili girişi açar.</p>
 <label style="text-align:left">E-posta</label><input id="kMail" autocomplete="off" placeholder="ornek@mail.com">
 <label style="text-align:left">Şifre</label><input id="kPass" type="password" placeholder="••••••">
@@ -50,7 +68,8 @@ body.kilitli .wrap{display:none}
 </div>
 </div>
 <div class="wrap">
-<h1>🔒 Admin İçe Aktarma <button id="kCikisBtn" class="ghost" style="font-size:12px;padding:6px 10px">🚪 Çıkış</button><br><span style="font-size:12px;color:#93a3b8">(personelle paylaşılmaz)</span></h1>
+<h1 style="display:none">🔒 Admin</h1>
+<div class="ahead"><div class="logo">🖥️</div><div><b>MakinistTakip • Admin Paneli</b><span id="admKim">—</span></div><button id="kCikisBtn" class="ghost" style="font-size:12px;padding:8px 12px">🚪 Çıkış</button></div>
 <nav class="anav" id="anav"></nav>
 <p class="hint">Excel'den kopyala → aşağıya yapıştır → <b>SQL Üret</b> → çıkan SQL'i Supabase &gt; SQL Editor'de çalıştır.<br>
 Eşleşme: her PAR'a kendinden sonraki ilk BOS verilir (en fazla 3 saat içinde). Eşleşmeyen PAR/BOS uyarı olarak listelenir. Gece yarısı (00:xx) saatler en sona alınır. Tur süresi 51 dk sabit.<br>
@@ -232,6 +251,20 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div id="htSonuc" style="margin-top:10px"></div>
 </div>
 <div class="card">
+<h2>🔍 Hat Kontrolü İşaretle (tekli)</h2>
+<label>Gün</label><select id="kGun" style="width:100%"><option value="1">Hafta İçi</option><option value="2">Cumartesi</option><option value="3">Pazar</option></select>
+<label>Görev No</label><input id="kGorev" inputmode="numeric" autocomplete="off" placeholder="örn 22">
+<div><button id="ktrListeBtn" class="ghost">↻ Turları Getir</button></div>
+<div id="ktrListe" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>🚏 Tarife Tarayıcı (müdahale)</h2>
+<label>Gün</label><select id="tbGun" style="width:100%"><option value="1">Hafta İçi</option><option value="2">Cumartesi</option><option value="3">Pazar</option></select>
+<label>Görev No</label><input id="tbGorev" inputmode="numeric" autocomplete="off" placeholder="örn 22">
+<div><button id="tbGetirBtn" class="ghost">↻ Turları Getir</button></div>
+<div id="tbListe" style="margin-top:10px"></div>
+</div>
+<div class="card">
 <h2>🆘 Acil Durumlar <span style="font-size:11px">(otomatik yenilenir)</span></h2>
 <div><button id="sosYenileBtn" class="ghost">↻ Yenile</button></div>
 <table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Görev</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="sosListe"></tbody></table>
@@ -288,19 +321,27 @@ async function kilitKontrol(){
  const ok=await kilitAcikMi();
  $("kilit").style.display=ok?"none":"grid";
  document.body.classList.toggle("kilitli",!ok);
- if(ok){$("admLogin").style.display="none";$("admPanel").style.display="block";$("admDurum").textContent="🟢 Giriş yapıldı"}
+ if(ok){$("admLogin").style.display="none";$("admPanel").style.display="block";$("admDurum").textContent="🟢 Giriş yapıldı";
+  try{const u=await sb.auth.getUser();if(u.data&&u.data.user)$("admKim").textContent="👤 "+u.data.user.email}catch(e){}}
 }
 kilitKontrol();
 $("kBtn").onclick=async()=>{
  const{error}=await sb.auth.signInWithPassword({email:$("kMail").value.trim(),password:$("kPass").value});
  if(error){$("kDurum").textContent="🔴 "+error.message;return}
- $("kDurum").textContent="";kilitKontrol();liste();
+ $("kDurum").textContent="";$("admKim").textContent="👤 "+$("kMail").value.trim();kilitKontrol();liste();
 };
 $("kCikisBtn").onclick=async()=>{await sb.auth.signOut();location.reload()};
 (function(){
- const sekmeler=[["📥 Veri",0],["👥 Kadro",2],["💬 Mesaj",3],["📢 Duyuru",4],["🕵️ Panel",6],["🆘 SOS",7],["📊 Rapor",12],["📚 İçerik",9]];
- const nav=$("anav");if(!nav)return;
- sekmeler.forEach(([ad,i])=>{const b=document.createElement("button");b.className="ghost";b.textContent=ad;b.onclick=()=>{const c=document.querySelectorAll(".wrap>.card")[i];if(c)c.scrollIntoView({behavior:"smooth",block:"start"})};nav.appendChild(b)});
+ const gruplar=[["🕵️ Panel",[6,10,15,16]],["📥 Veri",[0,1,5,7,8,9]],["👥 Kadro",[2,13]],["💬 İletişim",[3,4,11]],["📚 İçerik",[12,14]]];
+ const nav=$("anav");if(!nav)return;nav.innerHTML="";
+ function goster(i){
+  const cards=document.querySelectorAll(".wrap>.card");
+  cards.forEach((c,j)=>c.style.display=gruplar[i][1].includes(j)?"":"none");
+  [...nav.children].forEach((b,k)=>b.classList.toggle("on",k===i));
+  window.scrollTo({top:0});
+ }
+ gruplar.forEach(([ad],i)=>{const b=document.createElement("button");b.className="ghost";b.textContent=ad;b.onclick=()=>goster(i);nav.appendChild(b)});
+ goster(0);
  const top=$("topBtn");
  window.addEventListener("scroll",()=>{top.classList.toggle("goster",window.scrollY>600)},{passive:true});
  top.onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
@@ -399,7 +440,7 @@ window.sosSil=async id=>{
  if(error)alert(error.message);else sosListe();
 };
 setInterval(()=>sosListe(true),30000);
-const chip=t=>`<span style="background:#1e293b;border:1px solid #334155;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:800">${t}</span>`;
+const chip=t=>{const m=t.match(/^(\S+)\s+(.*)$/);return `<span style="background:linear-gradient(160deg,#1e293b,#16233f);border:1px solid #334155;border-radius:14px;padding:10px 14px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3)">${m?`<b style="font-size:16px">${m[1]}</b> <span style="color:#93a3b8">${m[2]}</span>`:t}</span>`};
 $("spYenileBtn").onclick=()=>spYenile(false);
 setInterval(()=>{if(!document.body.classList.contains("kilitli"))spYenile(true)},60000);
 async function spYenile(sessiz){
@@ -546,6 +587,48 @@ window.hSil=async id=>{
  if(!confirm("Kayıt silinsin mi?"))return;
  const{error}=await sb.from("arac_hareket").delete().eq("id",id);
  if(error)alert(error.message);else hListe();
+};
+$("ktrListeBtn").onclick=ktrListe;
+async function ktrListe(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const ttid=+$("kGun").value,g=$("kGorev").value.trim();
+ if(!g){alert("Görev yaz");return}
+ const{data,error}=await sb.from("timetable_rows").select("run,yon,saat,artirim,iptal,kontrol").eq("ttid",ttid).eq("gorevno",g).order("run").order("yon");
+ if(error){alert(error.message);return}
+ const m=new Map();
+ (data||[]).forEach(r=>{if(!m.has(r.run))m.set(r.run,{run:r.run});const o=m.get(r.run);if(r.yon===0)o.k1=r.saat.slice(0,8);else o.k2=r.saat.slice(0,8);o.ktr=o.ktr||r.kontrol});
+ const rows=[...m.values()].sort((a,b)=>a.run-b.run);
+ $("ktrListe").innerHTML=`<table><thead><tr><th>Run</th><th>PAR</th><th>BOS</th><th>Kontrol</th></tr></thead><tbody>`+(rows.map(o=>`<tr><td>${o.run>=500?"tek":o.run}</td><td>${o.k1||"—"}</td><td>${o.k2||"—"}</td><td><button class="ghost" onclick="ktrTgl(${o.run})">${o.ktr?"🔍 Var":"— Yok"}</button></td></tr>`).join("")||"<tr><td colspan=4>Kayıt yok</td></tr>")+`</tbody></table>`;
+}
+window.ktrTgl=async run=>{
+ const ttid=+$("kGun").value,g=$("kGorev").value.trim();
+ const cur=await sb.from("timetable_rows").select("kontrol").eq("ttid",ttid).eq("gorevno",g).eq("run",run).limit(1);
+ const v=cur.data&&cur.data[0]&&cur.data[0].kontrol;
+ const{error}=await sb.from("timetable_rows").update({kontrol:!v}).eq("ttid",ttid).eq("gorevno",g).eq("run",run);
+ if(error)alert(error.message);else ktrListe();
+};
+$("tbGetirBtn").onclick=tbListe;
+async function tbListe(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const ttid=+$("tbGun").value,g=$("tbGorev").value.trim();
+ if(!g){alert("Görev yaz");return}
+ const{data,error}=await sb.from("timetable_rows").select("run,yon,saat,artirim,iptal,kontrol").eq("ttid",ttid).eq("gorevno",g).order("run").order("yon");
+ if(error){alert(error.message);return}
+ const m=new Map();
+ (data||[]).forEach(r=>{if(!m.has(r.run))m.set(r.run,{run:r.run});const o=m.get(r.run);if(r.yon===0)o.k1=r.saat.slice(0,8);else o.k2=r.saat.slice(0,8);o.art=o.art||r.artirim;o.ipt=o.ipt||r.iptal;o.ktr=o.ktr||r.kontrol});
+ const rows=[...m.values()].sort((a,b)=>a.run-b.run);
+ $("tbListe").innerHTML=`<table><thead><tr><th>Run</th><th>PAR</th><th>BOS</th><th>➕</th><th>❌</th><th>🔍</th><th>Sil</th></tr></thead><tbody>`+(rows.map(o=>`<tr><td>${o.run>=500?"tek":o.run}</td><td>${o.k1||"—"}</td><td>${o.k2||"—"}</td><td><button class="ghost" onclick="tbTgl(${o.run},'artirim',${o.art?1:0})">${o.art?"➕":"—"}</button></td><td><button class="ghost" onclick="tbTgl(${o.run},'iptal',${o.ipt?1:0})">${o.ipt?"❌":"—"}</button></td><td><button class="ghost" onclick="tbTgl(${o.run},'kontrol',${o.ktr?1:0})">${o.ktr?"🔍":"—"}</button></td><td><button class="ghost" onclick="tbSil(${o.run})">Sil</button></td></tr>`).join("")||"<tr><td colspan=7>Kayıt yok</td></tr>")+`</tbody></table>`;
+}
+window.tbTgl=async(run,col,cur)=>{
+ const ttid=+$("tbGun").value,g=$("tbGorev").value.trim();
+ const{error}=await sb.from("timetable_rows").update({[col]:!cur}).eq("ttid",ttid).eq("gorevno",g).eq("run",run);
+ if(error)alert(error.message);else tbListe();
+};
+window.tbSil=async run=>{
+ if(!confirm(`Run ${run} silinsin mi? (2 yön birden)`))return;
+ const ttid=+$("tbGun").value,g=$("tbGorev").value.trim();
+ const{error}=await sb.from("timetable_rows").delete().eq("ttid",ttid).eq("gorevno",g).eq("run",run);
+ if(error)alert(error.message);else tbListe();
 };
 let _htRows=[];
 $("htOkuBtn").onclick=()=>{

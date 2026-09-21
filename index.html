@@ -665,6 +665,10 @@ function tick(){
   $("bKalan").textContent=kalanTur;$("bTamam").textContent=tamam;$("bSonraki").textContent=next.r.k1;
   // seferde mi molada mı
   const aktif=V.findIndex(r=>r.k1&&r.k2&&now>=tParse(r.k1)&&now<=tParse(r.k2));
+  // hat kontrolü: kontrol turlu sefer başlayınca özel alarm
+  const kt=V.find(r=>r.ktr&&r.k1&&now>=tParse(r.k1)&&(!r.k2||now<=tParse(r.k2)));
+  if(kt){const kk="k"+kt._i+"_"+kt.k1;
+   if(!warned.has(kk)){notify("🔍 Hat kontrolü",`${V.indexOf(kt)+1}. tur başladı — kontrolü yap`);alarmBaslat(kk,`🔍 HAT KONTROLÜ • ${V.indexOf(kt)+1}. tur başladı!`);}}
   $("bDurum").textContent=aktif>=0?`🚄 Seferde (${aktif+1}. tur)`:`☕ Hazırlık / Mola`;
   const key=next.i+"_"+next.r.k1;
   if(dk<=store.uyariDk&&dk>0&&!warned.has(key)){
