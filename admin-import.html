@@ -33,6 +33,7 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.03)}
 input:focus,textarea:focus,select:focus{outline:2px solid #22c55e;border-color:#22c55e}
 #topBtn{display:none;position:fixed;right:14px;bottom:14px;z-index:70;width:48px;height:48px;border-radius:99px;font-size:20px;padding:0}
 #topBtn.goster{display:block}
+#trOto.on,#tr1.on,#tr2.on,#tr3.on{background:#22c55e;color:#052e16;border:none}
 .ahead{background:linear-gradient(135deg,#0c4a6e,#155e75);border:1px solid #334155;border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;margin:14px 0 4px;box-shadow:0 10px 28px rgba(0,0,0,.4)}
 .ahead .logo{width:48px;height:48px;font-size:28px;background:rgba(255,255,255,.12);border-radius:14px;display:grid;place-items:center}
 .ahead b{font-size:17px;display:block}
@@ -103,7 +104,7 @@ function parse(txt,mod){
  const out=[],bad=[];
  txt.split(/\r?\n/).forEach((ln,i)=>{
   ln=ln.trim();if(!ln)return;
-  const cells=ln.split(/[\t;]+/).map(c=>c.trim()).filter(c=>c!=="");
+  const cells=ln.split(/[\t;]/).map(c=>c.trim()).filter(c=>c!=="");
   const tcell=cells.find(c=>/\d{1,2}:\d{2}/.test(c));
   const nums=cells.filter(c=>/^\d{1,3}$/.test(c));
   const saat=tcell?norm(tcell):null;
@@ -189,6 +190,7 @@ try{
  const d=new Date(),p=n=>String(n).padStart(2,"0");
  $("ozTarih").value=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
  $("ayIn").value=`${d.getFullYear()}-${p(d.getMonth()+1)}`;
+ $("czAy").value=`${d.getFullYear()}-${p(d.getMonth()+1)}`;
 }catch(e){}
 $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([$("sqlTxt").value],{type:"text/sql"}));a.download=`seed_gun${g}.sql`;a.click()};
 </script>
@@ -270,6 +272,25 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div id="tbListe" style="margin-top:10px"></div>
 </div>
 <div class="card">
+<h2>🔧 Arıza Bildirimleri</h2>
+<div><button id="arzYenileBtn" class="ghost">↻ Yenile</button></div>
+<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Arıza</th><th>Foto</th><th>Zaman</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="arzListe2"></tbody></table>
+</div>
+<div class="card">
+<h2>📅 Günlük Tarife Kararı</h2>
+<p class="hint">Seçili tarife tüm personele uygulanır. Otomatik = görev numarasından.</p>
+<div class="btnrow"><button id="trOto" class="ghost">Otomatik</button><button id="tr1" class="ghost">Hafta İçi</button><button id="tr2" class="ghost">Cumartesi</button><button id="tr3" class="ghost">Pazar</button></div>
+<div class="hint" id="trDurum">-</div>
+</div>
+<div class="card">
+<h2>📅 Çizelge Yükle (aylık)</h2>
+<p class="hint">Excel'den kopyala: satır başına sicil + günler (ad sütunu varsa atlanır). Başlık satırını (01..30) da yapıştırırsan sütunlar birebir eşleşir.</p>
+<label>Ay</label><input type="month" id="czAy">
+<label>Tablo (sicil, [ad], 1..31. günler)</label><textarea id="czTxt" style="min-height:110px" placeholder="5771&#9;Havva ÇAKMAK&#9;57&#9;57&#9;Yİ&#9;..."></textarea>
+<div><button id="czOkuBtn" class="ghost">👁️ Önizle</button><button id="czEkleBtn">⬆️ Yükle</button><button id="czTemizleBtn" class="ghost">🗑️ Ayı Temizle</button></div>
+<div id="czSonuc" style="margin-top:10px"></div>
+</div>
+<div class="card">
 <h2>🆘 Acil Durumlar <span style="font-size:11px">(otomatik yenilenir)</span></h2>
 <div><button id="sosYenileBtn" class="ghost">↻ Yenile</button></div>
 <table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Görev</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="sosListe"></tbody></table>
@@ -337,7 +358,7 @@ $("kBtn").onclick=async()=>{
 };
 $("kCikisBtn").onclick=async()=>{await sb.auth.signOut();location.reload()};
 (function(){
- const gruplar=[["🕵️ Panel",[6,10,15,16]],["📥 Veri",[0,1,5,7,8,9]],["👥 Kadro",[2,13]],["💬 İletişim",[3,4,11]],["📚 İçerik",[12,14]]];
+ const gruplar=[["🕵️ Panel",[6,11,16,17]],["📥 Veri",[0,1,5,7,8,9,10]],["👥 Kadro",[2,14]],["💬 İletişim",[3,4,12]],["📚 İçerik",[13,15]]];
  const nav=$("anav");if(!nav)return;nav.innerHTML="";
  function goster(i){
   const cards=document.querySelectorAll(".wrap>.card");
@@ -442,6 +463,19 @@ window.dSil=async id=>{
 let _sosMax=0;
 function sosBeep(){try{const C=new (window.AudioContext||window.webkitAudioContext)();[0,0.35,0.7].forEach(t=>{const o=C.createOscillator(),g=C.createGain();o.type="square";o.frequency.value=660;o.connect(g);g.connect(C.destination);g.gain.setValueAtTime(0.0001,C.currentTime+t);g.gain.exponentialRampToValueAtTime(0.2,C.currentTime+t+0.03);g.gain.exponentialRampToValueAtTime(0.0001,C.currentTime+t+0.3);o.start(C.currentTime+t);o.stop(C.currentTime+t+0.32)})}catch(e){}}
 $("sosYenileBtn").onclick=sosListe;
+async function trOku(){try{const{data}=await sb.from("ayarlar").select("deger").eq("anahtar","tarife").maybeSingle();const v=data?+(data.deger||0):0;$("trDurum").textContent="Aktif: "+["Otomatik","Hafta İçi","Cumartesi","Pazar"][v];[["trOto",0],["tr1",1],["tr2",2],["tr3",3]].forEach(([id,x])=>{const b=$(id);if(b)b.classList.toggle("on",x===v)})}catch(e){}}
+[["trOto",0],["tr1",1],["tr2",2],["tr3",3]].forEach(([id,x])=>{$(id).onclick=async()=>{if(!await _oturum()){alert("Önce giriş yap");return}const{error}=await sb.from("ayarlar").upsert({anahtar:"tarife",deger:String(x)});if(error)alert("🔴 "+error.message);else trOku()}});
+setTimeout(trOku,1500);
+$("arzYenileBtn").onclick=arzListe2;
+async function arzListe2(){
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const p=await sb.from("personel").select("sicil,ad");const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
+ const{data,error}=await sb.from("ariza").select("id,sicil,gorevno,aciklama,foto_url,durum,created_at").order("created_at",{ascending:false}).limit(50);
+ if(error){alert(error.message);return}
+ $("arzListe2").innerHTML=(data||[]).map(r=>`<tr><td>${r.sicil}<br><small>${ad[r.sicil]||""}</small></td><td style="text-align:left;max-width:200px">${(r.aciklama||"").slice(0,120)}</td><td>${r.foto_url?`<a href="${r.foto_url}" target="_blank">📷</a>`:"—"}</td><td>${(r.created_at||"").slice(5,16).replace("T"," ")}</td><td>${r.durum==="acik"?'<span class="pill warn">Açık</span>':'<span class="pill ok">Kapandı</span>'}</td><td><button class="ghost" onclick="arzKapat(${r.id},'${r.durum}')">${r.durum==="acik"?"Kapat":"Aç"}</button> <button class="ghost" onclick="arzSil(${r.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=6>Arıza yok ✅</td></tr>";
+}
+window.arzKapat=async(id,durum)=>{const{error}=await sb.from("ariza").update({durum:durum==="acik"?"kapandi":"acik"}).eq("id",id);if(error)alert(error.message);else arzListe2()};
+window.arzSil=async id=>{if(!confirm("Arıza kaydı silinsin mi?"))return;const{error}=await sb.from("ariza").delete().eq("id",id);if(error)alert(error.message);else arzListe2()};
 async function sosListe(sessiz){
  if(!await _oturum()){if(!sessiz)alert("Önce giriş yap");return}
  const{data,error}=await sb.from("sos").select("id,sicil,gorevno,created_at").order("created_at",{ascending:false}).limit(20);
@@ -605,6 +639,70 @@ window.hSil=async id=>{
  const{error}=await sb.from("arac_hareket").delete().eq("id",id);
  if(error)alert(error.message);else hListe();
 };
+let _czRows=[],_czAy="";
+$("czOkuBtn").onclick=()=>{
+ _czRows=[];const ay=$("czAy").value;
+ if(!ay){alert("Ay seç");return}
+ const[Y,M]=ay.split("-").map(Number),sonGun=new Date(Y,M,0).getDate();
+ let ok=0,kotu=[];
+ const satirlar=$("czTxt").value.split(/\r?\n/);
+ let harita=null;
+ for(const ln of satirlar){
+  const c=ln.split(/[\t;]/).map(x=>x.trim());
+  if(c.some(x=>/^\d{4,}$/.test(x)))continue;
+  let bas=-1,say=0,onceki=0;const mp={};
+  for(let k=0;k<c.length;k++){
+   const m=c[k].match(/^0?([1-9]|[12][0-9]|3[01])$/);
+   const n=m?+m[1]:0;
+   if(n===onceki+1||(onceki===0&&n===1)){if(bas<0)bas=k;say++;onceki=n;mp[n]=k}
+   else{bas=-1;say=0;onceki=0;for(const kk in mp)delete mp[kk];
+    if(n===1){bas=k;say=1;onceki=n;mp[n]=k}}
+  }
+  if(say>=10){harita=mp;break}
+ }
+ const haritaIdx=d=>harita&&harita[d]!==undefined?harita[d]:-1;
+ satirlar.forEach((ln,i)=>{
+  if(!ln.trim())return;
+  const c=ln.split(/[\t;]/).map(x=>x.trim());
+  const si=c.findIndex(x=>/^\d{4,}$/.test(x));
+  if(si>=0){
+  const sicil=c[si];let j=si+1;
+  if(j<c.length&&c[j].includes(" "))j++;
+  const gunMu=t=>/^\d+$/.test(t)||/^(Yİ|YI|R|Mİ|MI|F\d+|G|DP|Dİ|D\.İ|N)$/i.test(t)||t==="";
+  if(j<c.length&&!gunMu(c[j]))j++;
+  while((c.length-j)>sonGun&&c[j]==="")j++;
+  for(let d=1;d<=sonGun;d++){
+   const idx=harita?(harita[d]!==undefined?harita[d]:-1):(j+d-1);
+   if(idx<0)continue;
+   let v=String(c[idx]||"").trim().replace(/^F/i,"");
+   if(!v)continue;
+   _czRows.push({sicil,tarih:`${ay}-${String(d).padStart(2,"0")}`,gorevno:v});ok++;
+  }
+  }
+ });
+ _czAy=ay;
+ $("czSonuc").innerHTML=`<div class="ok">✅ ${_czRows.length} hücre okundu (${ay})</div>`+(_czRows.length?`<table><thead><tr><th>Sicil</th><th>Tarih</th><th>Değer</th></tr></thead><tbody>`+_czRows.slice(0,30).map(r=>`<tr><td>${r.sicil}</td><td>${r.tarih}</td><td>${r.gorevno}</td></tr>`).join("")+`</tbody></table>${_czRows.length>30?`<p class="hint">...ilk 30 gösteriliyor</p>`:""}`:"");
+};
+$("czEkleBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ if(!_czRows.length){alert("Önce Önizle");return}
+ if(!confirm(`${_czRows.length} kayıt yüklensin mi? (${_czAy})`))return;
+ let n=0;const BL=500;
+ for(let i=0;i<_czRows.length;i+=BL){
+  const{error}=await sb.from("cizelge").upsert(_czRows.slice(i,i+BL),{onConflict:"sicil,tarih"});
+  if(error){alert("🔴 "+error.message+" ("+n+"/"+_czRows.length+" yüklendi)");return}
+  n+=Math.min(BL,_czRows.length-i);
+ }
+ alert(`✅ ${n} kayıt yüklendi`);_czRows=[];
+};
+$("czTemizleBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce giriş yap");return}
+ const ay=$("czAy").value;if(!ay){alert("Ay seç");return}
+ if(!confirm(`${ay} ayının TÜM çizelgesi silinsin mi?`))return;
+ const[Y,M]=ay.split("-").map(Number),son=new Date(Y,M,0).getDate();
+ const{error}=await sb.from("cizelge").delete().gte("tarih",`${ay}-01`).lte("tarih",`${ay}-${son}`);
+ if(error)alert("🔴 "+error.message);else alert("Temizlendi");
+};
 $("ktrListeBtn").onclick=ktrListe;
 async function ktrListe(){
  if(!await _oturum()){alert("Önce giriş yap");return}
@@ -652,7 +750,7 @@ $("htOkuBtn").onclick=()=>{
  _htRows=[];const kotu=[];
  $("htTxt").value.split(/\r?\n/).forEach((ln,i)=>{
   ln=ln.trim();if(!ln)return;
-  const c=ln.split(/[\t;]+/).map(x=>x.trim()).filter(x=>x!=="");
+  const c=ln.split(/[\t;]/).map(x=>x.trim()).filter(x=>x!=="");
   const nums=c.filter(x=>/^\d{1,3}$/.test(x));
   const t=c.find(x=>/\d{1,2}:\d{2}/.test(x));
   const tipC=c.find(x=>/^(g|giriş|gir|c|çıkış|çık|cikis|\+|-|0|1)/i.test(x));
@@ -682,7 +780,7 @@ $("htTemizleBtn").onclick=async()=>{
 };
 $("ozBtn").onclick=async()=>{
  if(!await _oturum()){alert("Önce yukarıdan admin girişi yap");return}
- const t=$("ozTarih").value||new Date().toISOString().slice(0,10);
+  const t=$("ozTarih").value||(()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")})();
  const p=await sb.from("personel").select("sicil,ad");
  const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
  const g=await sb.from("gorev_log").select("sicil,gorevno,created_at").eq("tarih",t).order("sicil");
@@ -709,5 +807,6 @@ $("ayBtn").onclick=async()=>{
 };
 </script>
 <button id="topBtn" class="ghost">⬆️</button>
+<p class="hint" style="text-align:center;opacity:.6">Admin v2.4 • çizelge: başlık eşleme + boş hücre koruma</p>
 </body>
 </html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M8 Kumanda Merkezi</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#05070d;color:#f1f5f9}
+header{display:flex;align-items:center;gap:12px;padding:12px 22px;background:#0b1220;border-bottom:2px solid #1e293b;position:sticky;top:0;z-index:10;flex-wrap:wrap}
+header b{font-size:24px}header .saat{margin-left:auto;font-size:36px;font-weight:900;font-variant-numeric:tabular-nums}
+.cip{font-size:14px;font-weight:800;background:#16233f;border:1px solid #334155;padding:6px 14px;border-radius:99px;font-variant-numeric:tabular-nums}
+.cip.yesil{border-color:#22c55e;color:#4ade80}.cip.sari{border-color:#f59e0b;color:#fbbf24}.cip.gri{color:#9ca3af}.cip.kirmizi{background:#7f1d1d;border-color:#ef4444;animation:blink 1s infinite}
+.cip.mavi{border-color:#38bdf8;color:#7dd3fc}
+@keyframes blink{50%{opacity:.6}}
+#sesBtn{cursor:pointer}
+#sosBar{display:none;background:linear-gradient(90deg,#7f1d1d,#dc2626);font-size:22px;font-weight:900;text-align:center;padding:12px}
+#hero{text-align:center;padding:14px 10px 6px}
+#hero .h-lab{font-size:14px;letter-spacing:4px;color:#93a3b8;font-weight:800}
+#hero .h-buyuk{font-size:56px;font-weight:900;font-variant-numeric:tabular-nums;text-shadow:0 0 24px rgba(34,197,94,.5)}
+#hero .h-buyuk.kritik{color:#f87171;text-shadow:0 0 24px rgba(239,68,68,.7);animation:blink 1s infinite}
+#hatBarWrap{max-width:700px;margin:6px auto 0;padding:0 22px}
+#hatBar{height:10px;background:#1e293b;border-radius:99px;overflow:hidden}
+#hatBar>div{height:100%;background:linear-gradient(90deg,#16a34a,#4ade80)}
+#hatTxt{text-align:center;font-size:13px;color:#93a3b8;margin-top:4px;font-variant-numeric:tabular-nums}
+h2{font-size:15px;color:#93a3b8;letter-spacing:2px;margin:16px 22px 4px}
+.seritsel{display:flex;gap:10px;overflow-x:auto;padding:8px 22px}
+.kalk{background:#111c33;border:1px solid #334155;border-radius:14px;padding:10px 16px;min-width:170px;text-align:center}
+.kalk b{font-size:26px;font-variant-numeric:tabular-nums;display:block}
+.kalk span{font-size:13px;color:#93a3b8}
+.kalk.yakin{border-color:#ef4444;box-shadow:0 0 16px rgba(239,68,68,.4)}
+.kalk.yakin b{color:#f87171}
+.izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;padding:8px 22px 16px}
+.kart{background:#111c33;border:1px solid #334155;border-radius:18px;padding:14px}
+.kart .ust{display:flex;align-items:center;justify-content:space-between}
+.kart .g{font-size:28px;font-weight:900}
+.kart .durum{font-size:13px;font-weight:800;padding:4px 12px;border-radius:99px}
+.seferde{background:rgba(34,197,94,.2);color:#4ade80}
+.mola{background:rgba(245,158,11,.18);color:#fbbf24}
+.bitti{background:rgba(120,120,120,.15);color:#9ca3af}
+.kart .tur{font-size:15px;font-variant-numeric:tabular-nums;margin-top:8px;display:flex;justify-content:space-between}
+.kart .tur.siradaki{color:#fbbf24;font-weight:800}
+.kart .ekip{font-size:12px;color:#93a3b8;margin-top:6px}
+.bar{height:6px;background:#1e293b;border-radius:99px;margin-top:8px;overflow:hidden}
+.bar>div{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80)}
+.gunbar{position:relative;height:14px;background:#0b1220;border:1px solid #1e293b;border-radius:99px;margin-top:10px;overflow:hidden}
+.seg{position:absolute;top:0;bottom:0;border-radius:99px}
+.seg.done{background:#166534}.seg.now{background:#22c55e;box-shadow:0 0 10px #22c55e}.seg.next{background:#f59e0b}.seg.sonra{background:#334155}
+.gunbilgi{font-size:12px;color:#93a3b8;margin-top:6px;font-variant-numeric:tabular-nums}
+#fsBtn{cursor:pointer}
+.kayan{overflow:hidden;white-space:nowrap;border-top:2px solid #1e293b;background:#0b1220;padding:10px 0;position:sticky;bottom:0}
+.kayan span{display:inline-block;padding-left:100%;animation:kay 30s linear infinite;font-size:15px;color:#fbbf24;font-weight:700}
+@keyframes kay{to{transform:translateX(-100%)}}
+</style>
+</head>
+<body>
+<header><b>🚂 M8 Kumanda</b><span class="cip" id="tarihCip">-</span><select id="gunSec" style="width:auto;font-size:14px;font-weight:800;padding:6px 10px;border-radius:99px"><option value="0">📅 Otomatik</option><option value="1">Hafta İçi</option><option value="2">Cumartesi</option><option value="3">Pazar</option></select><span class="cip yesil" id="cSeferde">0 seferde</span><span class="cip sari" id="cMola">0 mola</span><span class="cip gri" id="cBitti">0 bitti</span><span class="cip mavi" id="cEkip">0 ekip</span><span class="cip kirmizi" id="msgCip" style="display:none">0 okunmamış</span><span class="cip" id="sesBtn" title="SOS sesi">🔇</span><span class="cip" id="fsBtn" title="Tam ekran">⛶</span><span class="saat" id="saat">--:--:--</span></header>
+<div id="sosBar"></div>
+<div id="hero"><div class="h-lab">SIRADAKİ KALKIŞ</div><div class="h-buyuk" id="heroTxt">—</div><div id="hatBarWrap"><div id="hatBar"><div id="hatBarIc" style="width:0%"></div></div><div id="hatTxt">-</div></div></div>
+<h2>⏭ YAKLAŞAN KALKIŞLAR</h2>
+<div class="seritsel" id="serit"><span class="cip">-</span></div>
+<h2>🚏 GÖREVLER</h2>
+<div class="izgara" id="izgara"><p>Yükleniyor...</p></div>
+<div class="kayan"><span id="kayanTxt">M8 Kumanda Merkezi • </span></div>
+<script src="supabase-config.js"></script>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const cfg=window.__SB__||{};
+const $=id=>document.getElementById(id);
+let sb=null;
+try{if(cfg.URL&&cfg.ANON_KEY)sb=createClient(cfg.URL,cfg.ANON_KEY)}catch(e){}
+const gun=()=>{const s=$("gunSec")?+$("gunSec").value:0;if(s>=1&&s<=3)return s;const d=new Date().getDay();return d===0?3:d===6?2:1};
+try{const g=localStorage.getItem("panoGun");if(g)$("gunSec").value=g}catch(e){}
+$("gunSec").onchange=()=>{try{localStorage.setItem("panoGun",$("gunSec").value)}catch(e){}yukle()};
+const tParse=hms=>{const n=new Date();const[a,b,c]=hms.split(":").map(Number);n.setHours(a,b||0,c||0,0);return n};
+const fm=ms=>{const s=Math.max(0,Math.floor(ms/1000));return String(Math.floor(s/3600)).padStart(2,"0")+":"+String(Math.floor(s%3600/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
+const blocal=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+let VERI=[],_sosMax=0,_sesAcik=false;
+$("sesBtn").onclick=()=>{_sesAcik=!_sesAcik;$("sesBtn").textContent=_sesAcik?"🔊":"🔇"};
+$("fsBtn").onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen()}catch(e){}};
+const GUN0=5*3600, GUN1=25*3600;
+function dkSn(hms){const[a,b,c]=hms.split(":").map(Number);let s=a*3600+b*60+(c||0);if(s<3*3600)s+=86400;return s}
+function bip(){if(!_sesAcik)return;try{const C=new (window.AudioContext||window.webkitAudioContext)();[0,0.3].forEach(t=>{const o=C.createOscillator(),g=C.createGain();o.type="square";o.frequency.value=880;o.connect(g);g.connect(C.destination);g.gain.setValueAtTime(0.001,C.currentTime+t);g.gain.exponentialRampToValueAtTime(0.2,C.currentTime+t+0.03);g.gain.exponentialRampToValueAtTime(0.001,C.currentTime+t+0.28);o.start(C.currentTime+t);o.stop(C.currentTime+t+0.3)})}catch(e){}}
+let _sonAnons="";
+function anons(metin){
+ if(!_sesAcik)return;
+ try{
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(metin);u.lang="tr-TR";u.rate=1.05;
+  speechSynthesis.speak(u);
+ }catch(e){}
+}
+async function yukle(){
+ try{
+  if(!sb)return;
+  const ttid=gun();
+  $("tarihCip").textContent=["","Hafta İçi","Cumartesi","Pazar"][ttid]+" • "+new Date().toLocaleDateString("tr-TR");
+  const r=await sb.from("timetable_rows").select("gorevno,run,yon,saat").eq("ttid",ttid).eq("iptal",false).limit(3000);
+  const m=new Map();
+  (r.data||[]).forEach(x=>{const k=x.gorevno+"#"+x.run;if(!m.has(k))m.set(k,{g:x.gorevno});if(x.yon===0)m.get(k).k1=x.saat.slice(0,8);else m.get(k).k2=x.saat.slice(0,8)});
+  VERI=[...m.values()].filter(x=>x.k1||x.k2);
+  const g=await sb.from("gorev_log").select("sicil,gorevno").eq("tarih",blocal()).limit(500);
+  const p=await sb.from("personel").select("sicil,ad");
+  const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
+  window._ekip={};(g.data||[]).forEach(x=>{(window._ekip[x.gorevno]=window._ekip[x.gorevno]||[]).push(ad[x.sicil]||x.sicil)});
+  window._acikSicil=new Set((g.data||[]).map(x=>x.sicil));
+  const cz=await sb.from("cizelge").select("sicil,gorevno").eq("tarih",blocal()).limit(1000);
+  window._cz={};window._czS={};
+  (cz.data||[]).forEach(x=>{const nm=ad[x.sicil]||x.sicil;(window._cz[x.gorevno]=window._cz[x.gorevno]||[]).push(nm);(window._czS[x.gorevno]=window._czS[x.gorevno]||[]).push(x.sicil)});
+  const mz=await sb.from("mesajlar").select("id,sicil").eq("okundu",false).limit(200);
+  const mc=$("msgCip"),n=(mz.data||[]).length;
+  mc.style.display=n?"":"none";mc.textContent=`✖️ ${n} okunmamış`;
+  const s=await sb.from("sos").select("id,sicil,gorevno,created_at").order("created_at",{ascending:false}).limit(10);
+  const max=(s.data||[]).length?Math.max(...s.data.map(x=>x.id)):0;
+  if(max>_sosMax&&_sosMax>0)bip();
+  _sosMax=Math.max(_sosMax,max);
+  const bar=$("sosBar");
+  const yeni=(s.data||[]).filter(x=>Date.now()-new Date(x.created_at).getTime()<30*60000);
+  if(yeni.length){bar.style.display="block";bar.textContent=`🆘 ACİL: ${yeni.map(x=>x.sicil+" (Görev "+(x.gorevno||"-")+")").join(" • ")}`}
+  else bar.style.display="none";
+  const du=await sb.from("duyurular").select("mesaj,created_at").order("created_at",{ascending:false}).limit(5);
+  const olay=(du.data||[]).map(x=>`📢 ${x.mesaj}`).join(" • ");
+  $("kayanTxt").textContent=`M8 Kumanda Merkezi • ${new Date().toLocaleDateString("tr-TR")} • ${olay?olay+" • ":""}Son güncelleme ${new Date().toLocaleTimeString("tr-TR")} • `;
+ }catch(e){}
+ ciz();
+}
+function ciz(){
+ const now=new Date(),gruplar={};
+ VERI.forEach(t=>{(gruplar[t.g]=gruplar[t.g]||[]).push(t)});
+ let nS=0,nM=0,nB=0;const yaklasan=[];
+ const kartlar=Object.keys(gruplar).sort((a,b)=>a-b).map(g=>{
+  const turlar=gruplar[g].sort((a,b)=>((a.k1||a.k2)>(b.k1||b.k2)?1:-1));
+  const biten=turlar.filter(t=>t.k2?now>tParse(t.k2):(t.k1&&now>tParse(t.k1))).length;
+  const aktif=turlar.find(t=>t.k1&&t.k2&&now>=tParse(t.k1)&&now<=tParse(t.k2));
+  let cls,txt;
+  if(biten>=turlar.length){cls="bitti";txt="BİTTİ ✅";nB++}
+  else if(aktif){cls="seferde";txt="SEFERDE 🚄";nS++}
+  else{cls="mola";txt="MOLA";nM++}
+  turlar.filter(t=>t.k1&&tParse(t.k1)>now).slice(0,2).forEach(t=>yaklasan.push({g,k1:t.k1,t:tParse(t.k1)}));
+  const liste=turlar.filter(t=>t.k1&&(t.k2?! (now>tParse(t.k2)):now<=tParse(t.k1))).slice(0,3).map(t=>{
+   const snr=t.k1&&tParse(t.k1)>now;
+   let bar="";
+   if(t.k1&&t.k2&&now>=tParse(t.k1)&&now<=tParse(t.k2)){const p=Math.min(100,((now-tParse(t.k1))/(tParse(t.k2)-tParse(t.k1)))*100);bar=`<div class="bar"><div style="width:${p}%"></div></div>`}
+   return `<div class="tur${snr?" siradaki":""}"><span>${t.k1?t.k1.slice(0,5):"—"} → ${t.k2?t.k2.slice(0,5):"—"}</span><span>${snr?("-"+fm(tParse(t.k1)-now)):""}</span></div>${bar}`;
+  }).join("");
+  const ekip=(window._ekip[g]||[]).join(", ");
+  const plan=(window._cz[g]||[]),psic=(window._czS[g]||[]),acik=window._acikSicil||new Set();
+  const planTxt=plan.length?plan.map((nm,i)=>nm+(acik.has(psic[i])?" ✓":"")).join(", "):(ekip||"—");
+  const segs=turlar.filter(t=>t.k1&&t.k2).map(t=>{
+   const a=dkSn(t.k1),b=dkSn(t.k2),n=now.getHours()*3600+now.getMinutes()*60+now.getSeconds()+(now.getHours()<3?86400:0);
+   const cls=b<=n?"done":(a<=n&&n<=b?"now":(t.k1&&tParse(t.k1)>now&&!turlar.some(x=>x.k1&&tParse(x.k1)>now&&tParse(x.k1)<tParse(t.k1))?"next":"sonra"));
+   const l=Math.max(0,Math.min(100,(a-GUN0)/(GUN1-GUN0)*100)),w=Math.max(1.5,Math.min(100-l,(b-a)/(GUN1-GUN0)*100));
+   return `<div class="seg ${cls}" style="left:${l}%;width:${w}%" title="${t.k1.slice(0,5)}-${t.k2.slice(0,5)}"></div>`;
+  }).join("");
+  const kalanT=turlar.filter(t=>(t.k2?now<=tParse(t.k2):(t.k1&&now<=tParse(t.k1)))).length;
+  const gunYuzde=Math.round(biten/turlar.length*100);
+  return `<div class="kart"><div class="ust"><span class="g">Görev ${g}</span><span class="durum ${cls}">${txt}</span></div>${liste}<div class="gunbar">${segs}</div><div class="gunbilgi">gün %${gunYuzde} • kalan ${kalanT} tur</div><div class="ekip">👤 ${planTxt}</div></div>`;
+ }).join("");
+ document.getElementById("izgara").innerHTML=kartlar||"<p>Veri yok</p>";
+ document.getElementById("cSeferde").textContent=`${nS} seferde`;
+ document.getElementById("cMola").textContent=`${nM} mola`;
+ document.getElementById("cBitti").textContent=`${nB} bitti`;
+ const eg=Object.keys(window._ekip||{}).length;
+ document.getElementById("cEkip").textContent=`${eg} ekip sahada`;
+ yaklasan.sort((a,b)=>a.t-b.t);
+ document.getElementById("serit").innerHTML=yaklasan.slice(0,10).map(y=>{const dk=(y.t-now)/60000;return `<div class="kalk${dk<=10?" yakin":""}"><b>${y.k1.slice(0,5)}</b><span>Görev ${y.g} • -${fm(y.t-now)}</span></div>`}).join("")||'<span class="cip">-</span>';
+ const ilk=yaklasan[0],hero=document.getElementById("heroTxt");
+ if(ilk){const k=ilk.g+"_"+ilk.k1;hero.textContent=`${ilk.k1.slice(0,5)} • Görev ${ilk.g} • -${fm(ilk.t-now)}`;hero.classList.toggle("kritik",(ilk.t-now)<=5*60000);
+  if((ilk.t-now)<=2*60000&&_sonAnons!==k){_sonAnons=k;anons(`Görev ${ilk.g} kalkışına iki dakika kaldı.`)}
+ }else{hero.textContent="Seferler tamamlandı ✅";hero.classList.remove("kritik")}
+ let topT=0,bitT=0;
+ VERI.forEach(t=>{if(t.k1&&t.k2){topT++;if(now>tParse(t.k2))bitT++}});
+ const hy=topT?Math.round(bitT/topT*100):100;
+ document.getElementById("hatBarIc").style.width=hy+"%";
+ document.getElementById("hatTxt").textContent=`hat geneli %${hy} • ${bitT}/${topT} tur tamamlandı`;
+}
+setInterval(()=>{document.getElementById("saat").textContent=new Date().toLocaleTimeString("tr-TR");ciz()},1000);
+yukle();setInterval(yukle,60000);
+</script>
+</body>
+</html>

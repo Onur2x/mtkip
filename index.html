@@ -208,6 +208,8 @@ button:active::after{animation:ripple .55s}
 <button id="sosBtn" style="flex:0 0 52px;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;min-width:52px">SOS</button>
 <button id="yenileBtn" class="ghost" style="flex:0 0 52px">↻</button>
 </div>
+<div class="hint" id="tarifeNot" style="margin:0 2px 8px"></div>
+<div class="hint" id="czNot" style="margin:0 2px 8px"></div>
 <div class="btnrow"><button id="baslaBtn" class="ghost">✅ Vardiyaya Başladım</button></div>
 <div id="sosModal" class="alarm-modal">
 <div class="alarm-box" style="background:linear-gradient(160deg,#450a0a,#b91c1c)">
@@ -273,6 +275,12 @@ button:active::after{animation:ripple .55s}
 <label>Hedef Sicil (boş bırakırsan herkese açık olur)<input id="tkHedef" inputmode="numeric"></label>
 <div class="btnrow"><button id="tkGonderBtn">Gönder</button></div>
 <div id="tkListe"></div>
+</div>
+<div class="card"><h3>📸 ARIZA BİLDİR</h3>
+<label>Ne oldu?</label><textarea id="arzTxt" style="min-height:70px" placeholder="örn Vagon 3 kapı arızası..."></textarea>
+<label>Fotoğraf (isteğe bağlı)<input type="file" id="arzFoto" accept="image/*"></label>
+<div class="btnrow"><button id="arzBtn">📤 Gönder</button></div>
+<div id="arzListe"></div>
 </div>
 <div class="card"><h3>✉️ YÖNETİME YAZ</h3>
 <label>Mesajın</label><textarea id="admMsgTxt" style="min-height:70px" placeholder="Yönetime iletmek istediğin..."></textarea>
@@ -342,6 +350,15 @@ const ORNEK=[{d:28,k1:"07:33:19",k2:"08:00:04",t:51,run:1},{d:49,k1:"08:54:46",k
 const TEMALAR=[{id:"gece",ad:"🌙 Gece",c:"#0b1220"},{id:"gunduz",ad:"☀️ Gündüz",c:"#f1f5f9"},{id:"orman",ad:"🌲 Orman",c:"#065f46"},{id:"okyanus",ad:"🌊 Okyanus",c:"#0c4a6e"},{id:"gunbatimi",ad:"🌅 Günbatımı",c:"#6d28d9"},{id:"bordo",ad:"🍷 Bordo",c:"#991b1b"},{id:"seker",ad:"🍬 Şeker",c:"#fce7f3"},{id:"kiraz",ad:"🌸 Kiraz",c:"#9d174d"},{id:"lila",ad:"💜 Lila",c:"#ede9fe"},{id:"uzum",ad:"🍇 Üzüm",c:"#5b21b6"},{id:"buz",ad:"🧊 Buz",c:"#e0f2fe"},{id:"fume",ad:"🌫️ Füme",c:"#27272a"},{id:"karamel",ad:"☕ Karamel",c:"#6b4c22"},{id:"zeytin",ad:"🫒 Zeytin",c:"#3f6212"}];
 let store=JSON.parse(localStorage.getItem("trenStore2")||"null")||{uyariDk:5,ses:true,titresim:true,tema:"gece",veri:[],sbUrl:"",sbKey:"",grupId:1,gorevNo:"",sbOn:true,personel:null};
 let warned=new Set();
+let warnedAnons=new Set();
+function sesliSoyle(metin){
+ try{
+  if(!store.ses||!("speechSynthesis" in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(metin);u.lang="tr-TR";u.rate=1.05;
+  speechSynthesis.speak(u);
+ }catch(e){}
+}
 const $=id=>document.getElementById(id);
 const tParse=hms=>{const n=new Date();const[a,b,c]=hms.split(":").map(Number);n.setHours(a,b||0,c||0,0);return n};
 // dinlenme = bu PAR − (önceki BOS + önceki seyahat); ilk satırda dinlenme olmaz
@@ -429,7 +446,7 @@ async function girisYap(){
   if(error||!data){loginHata("Sicil bulunamadı");return}
   if(data.aktif===false){loginHata("Hesap pasif");return}
   store.personel={sicil,ad:data.ad};persist();
-  $("loginModal").classList.remove("acik");baslamaKontrol();
+  $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
  }finally{$("girisBtn").textContent="🔑 Giriş"}
 }
 $("girisBtn").onclick=girisYap;
@@ -571,8 +588,17 @@ function rowsToTurlar(rows){
 }
 const GRUP_AD={1:"Hafta İçi",2:"Cumartesi",3:"Pazar"};
 function gorevToGrup(g){g=+g;if(g>=101&&g<=199)return 2;if(g>=201&&g<=299)return 3;return 1}
+function aktifTtid(){const s=+(store.sunucuTarife||0);if(s>=1&&s<=3)return s;return gorevToGrup(store.gorevNo||1)}
+async function tarifeGetir(){
+ try{
+  const sb=sbClient();if(!sb)return;
+  const{data}=await sb.from("ayarlar").select("deger").eq("anahtar","tarife").maybeSingle();
+  const y=data?+(data.deger||0):0;
+  if(y!==(store.sunucuTarife||0)){store.sunucuTarife=y;persist();warned.clear();warnedAnons.clear();store.grupId=aktifTtid();if(store.gorevNo)sbLoadRows();else render()}
+ }catch(e){}
+}
 async function sbLoadRows(){const sb=sbClient();if(!sb)return;
- store.grupId=gorevToGrup(store.gorevNo);
+ store.grupId=aktifTtid();
  $("bGorev").textContent=store.gorevNo;
  sbDurumYaz("⏳ Yükleniyor...");
  const {data,error}=await sb.from("timetable_rows").select("run,yon,saat,dinlenme_dk,tur_suresi_dk,artirim,iptal,kontrol").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).order("run").order("yon");
@@ -582,7 +608,7 @@ async function sbLoadRows(){const sb=sbClient();if(!sb)return;
   const h=await sb.from("arac_hareket").select("saat,tip").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).limit(200);
   store.hz={};(h.data||[]).forEach(x=>{store.hz[String(x.saat).slice(0,8)]=x.tip});
  }catch(e){}
-  if(turlar.length){store.veri=turlar;warned.clear();persist();render();gecmisEkle();logGorev();sahaGetir();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Görev ${store.gorevNo}`)}
+  if(turlar.length){store.veri=turlar;warned.clear();warnedAnons.clear();persist();render();gecmisEkle();logGorev();sahaGetir();sbDurumYaz(`🟢 ${turlar.length} tur yüklendi • Görev ${store.gorevNo}`)}
   else{logGorev();sbDurumYaz(`⚠️ Görev ${store.gorevNo} için kayıt yok`)}}
 async function sbRefresh(){if(!sbActive()||!sbClient()){sbDurumYaz();return}try{await sbLoadRows()}catch(e){sbDurumYaz("🔴 "+e.message)}}
 async function sahaGetir(){
@@ -600,8 +626,9 @@ function render(){
   $("kullaniciTxt").textContent=store.personel?("👤 "+store.personel.ad+" ("+store.personel.sicil+")"+(seriHesapla()>=2?(" • 🔥 "+seriHesapla()+" gün"):"")):"";
   const gl=$("gecmisListe");if(gl){store.gecmis=store.gecmis||[];gl.innerHTML=store.gecmis.length?store.gecmis.slice(0,10).map(g=>`<div class="kv"><span>${g.tarih}</span><b>Görev ${g.gorevno}</b></div>`).join(""):'<p class="hint">Henüz kayıt yok</p>'};
   const ba=$("bAyim");if(ba){const d=new Date(),ay=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;ba.textContent=new Set((store.gecmis||[]).filter(g=>(g.tarih||"").slice(0,7)===ay).map(g=>g.tarih)).size};
-  store.grupId=gorevToGrup(store.gorevNo||1);
+  store.grupId=aktifTtid();
   const _ig=$("inGorev");if(_ig&&document.activeElement!==_ig)_ig.value=store.gorevNo||"";
+  const _tn=$("tarifeNot");if(_tn){const s=+(store.sunucuTarife||0);_tn.textContent=s>=1?("📅 "+({1:"Hafta İçi",2:"Cumartesi",3:"Pazar"}[s])+" tarifesi (yönetim kararı)"):""};
   if(store.gorevNo)gecmisEkle();
  const tb=$("tbody");tb.innerHTML="";
  // güvenlik: PAR saati BOS'tan geç ise (yon ters girilmiş veri) otomatik düzelt (gece yarısı hariç)
@@ -611,8 +638,11 @@ function render(){
   const hz=store.hz||{};
   const m1=r.k1&&hz[r.k1.slice(0,8)]!==undefined,m2=!m1&&r.k2&&hz[r.k2.slice(0,8)]!==undefined;
   const tip=m1?hz[r.k1.slice(0,8)]:m2?hz[r.k2.slice(0,8)]:null;
-  const roz=tip===0?`<br><span class="hz hz-g">+ GİRİŞ</span>`:tip===1?`<br><span class="hz hz-c">− ÇIKIŞ</span>`:"";
-  const k1=(r.k1?r.k1.slice(0,5):"—")+(m1?roz:""),k2=(r.k2?r.k2.slice(0,5):"—")+(m2?roz:"");
+  const rozG=`<br><span class="hz hz-g">+ GİRİŞ</span>`;
+  const rozC=`<br><span class="hz hz-c">SERVİS DIŞI</span>`;
+  let k1=r.k1?r.k1.slice(0,5):"—",k2=r.k2?r.k2.slice(0,5):"—";
+  if(tip===0){if(m1)k1+=rozG;else if(m2)k2+=rozG}
+  else if(tip===1){if(r.k2)k2+=rozC;else if(m1)k1+=rozC}
   const tur=r.ipt?`❌`:`${r.t}'${r.art?" ➕":""}${r.ktr?" 🔍":""}`;
   if(r.ipt)tr.classList.add("iptal");
   tr.innerHTML=`<td>${r.d}</td><td>${k1}</td><td>${k2}</td><td title="${r.art?"Ek sefer (artırım)":""}">${tur}</td>`;tb.appendChild(tr)});
@@ -676,6 +706,7 @@ function tick(){
    if(!warned.has(kk)){notify("🔍 Hat kontrolü",`${V.indexOf(kt)+1}. tur başladı — kontrolü yap`);alarmBaslat(kk,`🔍 HAT KONTROLÜ • ${V.indexOf(kt)+1}. tur başladı!`);}}
   $("bDurum").textContent=aktif>=0?`🚄 Seferde (${aktif+1}. tur)`:`☕ Hazırlık / Mola`;
   const key=next.i+"_"+next.r.k1;
+  if(s<=60&&s>0&&!warnedAnons.has(key)){warnedAnons.add(key);sesliSoyle(`Bir dakika kaldı. PAR kalkışı ${next.r.k1}. ${(next.p+1)}. tur.`)}
   if(dk<=store.uyariDk&&dk>0&&!warned.has(key)){
    const bn=$("banner");bn.style.display="block";bn.textContent=`⚠️ ${next.r.k1} PAR kalkışına ${Math.ceil(dk)} dk kaldı! (${next.p+1}. tur${next.r.ktr?" 🔍":""})`;
    notify("Kalkış Uyarısı",`${next.r.k1} kalkışına ${Math.ceil(dk)} dk kaldı`);
@@ -709,7 +740,25 @@ $("inMesajSes").onchange=()=>{store.mesajSes=$("inMesajSes").value;persist();msg
 $("bildirimBtn").onclick=async()=>{try{alert("Bildirim izni: "+await Notification.requestPermission())}catch(e){alert(e.message)}};
 $("testBtn").onclick=()=>{notify("Test","Uyarı sistemi çalışıyor ✅");alarmBaslat("test","TEST — düdük çalıyor, SUSTUR'a bas ✅")};
 let _gorevT=null;
-$("inGorev").oninput=()=>{clearTimeout(_gorevT);_gorevT=setTimeout(async()=>{const v=$("inGorev").value.trim();if(!v)return;store.gorevNo=v;persist();warned.clear();store.grupId=gorevToGrup(v);if(sbActive()){await sbLoadRows()}else{render()}},600)};
+$("inGorev").oninput=()=>{clearTimeout(_gorevT);_gorevT=setTimeout(async()=>{const v=$("inGorev").value.trim();if(!v)return;store.gorevNo=v;store.gorevElle=bugun();const cz=$("czNot");if(cz)cz.textContent="";persist();warned.clear();warnedAnons.clear();store.grupId=aktifTtid();if(sbActive()){await sbLoadRows()}else{render()}},600)};
+async function cizelgeGetir(){
+ try{
+  const sb=sbClient();if(!sb||!store.personel||!store.personel.sicil)return;
+  const t=bugun();
+  const{data}=await sb.from("cizelge").select("gorevno").eq("sicil",String(store.personel.sicil)).eq("tarih",t).maybeSingle();
+  const cz=$("czNot");
+  if(!data||!data.gorevno){if(cz)cz.textContent="";return}
+  const v=String(data.gorevno).trim().replace(/^F/i,"");
+  if(/^\d+$/.test(v)){
+   if(store.gorevElle===t){if(cz)cz.textContent="";return}
+   if(store.gorevNo!==v){store.gorevNo=v;persist();warned.clear();warnedAnons.clear();store.grupId=aktifTtid();if(cz)cz.textContent=`📋 Çizelgeden alındı: Görev ${v}`;sbLoadRows()}
+  }else{
+   store.veri=[];store.gorevNo="";persist();
+   if(cz)cz.textContent=`📋 Bugün çizelgede: ${v} — sefer yok`;
+   render();
+  }
+ }catch(e){}
+}
 $("yenileBtn").onclick=()=>{if(sbActive())sbRefresh();else{render();alert("Çevrimdışı veri kullanılıyor")}};
 async function baslamaKontrol(){
  try{
@@ -813,7 +862,33 @@ window.quizCevap=async i=>{
  $("quizSonuc").textContent=`✅ ${_qd} doğru, ❌ ${_qy} yanlış`;
  try{const sb=sbClient();if(sb&&store.personel)await sb.from("sinav_sonuc").insert({sicil:String(store.personel.sicil),dogru:_qd,yanlis:_qy})}catch(e){}
 };
-function kurumsalYenile(){talimatGetir();dokGetir();takasListe();liderGetir();admGelenListe();}
+function kurumsalYenile(){talimatGetir();dokGetir();takasListe();liderGetir();admGelenListe();arzListe();}
+$("arzBtn").onclick=async()=>{
+ try{
+  const sb=sbClient();if(!sb||!store.personel){alert("Önce giriş yap");return}
+  const aciklama=$("arzTxt").value.trim();if(!aciklama){alert("Arızayı yaz");return}
+  let foto_url=null;
+  const f=$("arzFoto").files[0];
+  if(f){
+   if(f.size>5000000){alert("Fotoğraf çok büyük (en fazla 5 MB)");return}
+   const yol=`${store.personel.sicil}_${Date.now()}.jpg`;
+   const up=await sb.storage.from("ariza-foto").upload(yol,f);
+   if(up.error){alert("🔴 Fotoğraf yüklenemedi: "+up.error.message);return}
+   foto_url=sb.storage.from("ariza-foto").getPublicUrl(yol).data.publicUrl;
+  }
+  const{error}=await sb.from("ariza").insert({sicil:String(store.personel.sicil),gorevno:String(store.gorevNo||""),aciklama,foto_url});
+  if(error){alert("🔴 "+error.message);return}
+  $("arzTxt").value="";$("arzFoto").value="";alert("Arıza bildirildi ✅");arzListe();
+ }catch(e){}
+};
+async function arzListe(){
+ try{
+  const sb=sbClient();if(!sb||!store.personel)return;
+  const{data}=await sb.from("ariza").select("aciklama,durum,created_at").eq("sicil",String(store.personel.sicil)).order("created_at",{ascending:false}).limit(5);
+  const el=$("arzListe");if(!el)return;
+  el.innerHTML=(data||[]).length?(data||[]).map(r=>`<div class="kv"><span style="text-align:left">${(r.aciklama||"").slice(0,60)}</span><b>${r.durum==="acik"?"🟡 Açık":"✅ Kapandı"}</b></div>`).join(""):'<p class="hint">Bildirimin yok</p>';
+ }catch(e){}
+}
 $("admMsgBtn").onclick=async()=>{
  try{
   const sb=sbClient();if(!sb||!store.personel){alert("Önce giriş yap");return}
@@ -874,6 +949,8 @@ mesajKontrol();setInterval(mesajKontrol,30000);
 havaGetir();setInterval(havaGetir,30*60*1000);
 baglantiKontrol();setInterval(baglantiKontrol,60000);
 sahaGetir();setInterval(sahaGetir,5*60*1000);
+tarifeGetir();setInterval(tarifeGetir,60000);
+if(store.personel)cizelgeGetir();
 baslamaKontrol();
 if(!store.personel)$("loginModal").classList.add("acik");
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
