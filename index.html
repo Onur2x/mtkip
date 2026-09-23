@@ -1008,7 +1008,7 @@ async function admGelenListe(){
   const sb=sbClient();if(!sb||!store.personel)return;
   const{data}=await sb.from("mesajlar").select("mesaj,created_at").eq("sicil",String(store.personel.sicil)).eq("yon",1).order("created_at",{ascending:false}).limit(5);
   const el=$("admMsgListe");if(!el)return;
-  el.innerHTML=(data||[]).length?(data||[]).map(r=>`<div class="kv"><span style="text-align:left">${(r.mesaj||"").slice(0,60)}</span><b>${(r.created_at||"").slice(5,16).replace("T"," ")}</b></div>`).join(""):'<p class="hint">Gönderdiğin mesaj yok</p>';
+  el.innerHTML=(data||[]).length?(data||[]).map(r=>{let z="";try{const d=new Date(r.created_at);z=d.toLocaleDateString("tr-TR")+" "+d.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}catch(e){}return `<div class="kv"><span style="text-align:left">${(r.mesaj||"").slice(0,60)}</span><b>${z}</b></div>`}).join(""):'<p class="hint">Gönderdiğin mesaj yok</p>';
  }catch(e){}
 }
 async function liderGetir(){

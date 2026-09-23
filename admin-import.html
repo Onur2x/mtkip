@@ -26,12 +26,38 @@ body{counter-reset:admsec}
 .anav{position:sticky;top:0;z-index:60;background:rgba(11,18,32,.94);backdrop-filter:blur(10px);padding:10px 4px;border-bottom:1px solid #334155;display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding-left:14px;padding-right:14px}
 .anav button{flex:0 0 auto;font-size:12px;padding:8px 12px;margin:0;border-radius:99px;white-space:nowrap}
 .anav button.on{background:#22c55e;color:#052e16;border:none}
+.anav button{position:relative}
+.anav button .roz{display:none;position:absolute;top:2px;right:6px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;border-radius:99px;line-height:18px;text-align:center;padding:0 4px}
+.anav button .roz.var{display:block}
+#uyariBar{display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:200;background:linear-gradient(90deg,#7f1d1d,#dc2626);color:#fff;font-weight:800;padding:12px 20px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:92vw;text-align:center}
 @media(min-width:960px){
- body{padding-left:224px}
- .anav{position:fixed;left:0;top:0;bottom:0;width:224px;flex-direction:column;align-items:stretch;gap:8px;margin:0;padding:22px 14px;border-bottom:none;border-right:1px solid #334155;overflow-y:auto}
+ body{padding-left:0}
+ .ahead{position:sticky;top:0;z-index:60;margin:0 0 0 240px;border-radius:0;border-left:none;border-right:none;border-top:none}
+ .anav{position:fixed;left:0;top:0;bottom:0;width:240px;flex-direction:column;align-items:stretch;gap:8px;margin:0;padding:20px 14px;border-bottom:none;border-right:1px solid #334155;overflow-y:auto;background:#0b1220}
+ .anav::before{content:"🖥️ MakinistTakip";font-weight:900;font-size:16px;padding:4px 10px 14px;color:#f1f5f9}
  .anav button{text-align:left;font-size:14px;padding:13px 15px}
- .wrap{max-width:860px}
+ .wrap{max-width:960px;margin:0 auto 0 240px;padding-left:22px;padding-right:22px}
+ #kilit{left:0}
 }
+.kpi{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(160deg,#1e293b,#16233f);border:1px solid #334155;border-radius:16px;padding:12px 18px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.kpi .ic{font-size:26px}
+.kpi .sayi{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;display:block;line-height:1}
+.kpi .etk{font-size:11px;color:#93a3b8}
+#topSaat{font-variant-numeric:tabular-nums;font-weight:800}
+#kulAra{margin:8px 0 0}
+.kpi{background:linear-gradient(160deg,#16233f,#111c33);border:1px solid #334155;border-left:5px solid #22c55e;border-radius:14px;padding:12px 16px;min-width:150px;flex:1 1 150px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.kpi .ic{font-size:20px}
+.kpi .sayi{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums;display:block;line-height:1.1}
+.kpi .etk{font-size:11px;color:#93a3b8}
+.kpi.kirmizi{border-left-color:#ef4444}.kpi.sari{border-left-color:#f59e0b}.kpi.mavi{border-left-color:#38bdf8}.kpi.mor{border-left-color:#a78bfa}
+.dilrow{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:8px 0}
+.dilrow>div{flex:1;min-width:130px}
+.bigraph{background:#111c33;border:1px solid #334155;border-radius:14px;padding:12px;margin-top:10px}
+.bigraph h4{margin:0 0 8px;font-size:12px;color:#93a3b8;letter-spacing:1px}
+.bar14{display:flex;align-items:flex-end;gap:5px;height:90px}
+.bar14>div{flex:1;border-radius:5px 5px 0 0;min-height:6px;background:linear-gradient(180deg,#22c55e,#166534)}
+.donutwrap{display:flex;align-items:center;gap:14px}
+.donutlej{font-size:12px;color:#93a3b8;line-height:1.9}
 .card h2::before{counter-increment:admsec;content:counter(admsec,decimal-leading-zero);display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#22c55e;color:#052e16;font-size:13px;margin-right:8px}
 .card{box-shadow:0 8px 24px rgba(0,0,0,.35)}
 table{font-variant-numeric:tabular-nums}
@@ -76,7 +102,8 @@ body.kilitli .wrap{display:none}
 </div>
 <div class="wrap">
 <h1 style="display:none">🔒 Admin</h1>
-<div class="ahead"><div class="logo">🖥️</div><div><b>MakinistTakip • Admin Paneli</b><span id="admKim">—</span></div><button id="kCikisBtn" class="ghost" style="font-size:12px;padding:8px 12px">🚪 Çıkış</button></div>
+<div class="ahead"><div class="logo">🖥️</div><div><b>MakinistTakip • Admin Paneli</b><span id="admKim">—</span></div><span id="topSaat" style="margin-left:auto;font-size:15px"></span><button id="bildirimAcBtn" class="ghost" style="font-size:12px;padding:8px 12px;flex:0 0 auto">🔔</button><button id="kCikisBtn" class="ghost" style="font-size:12px;padding:8px 12px">🚪 Çıkış</button></div>
+<div id="uyariBar"></div>
 <nav class="anav" id="anav"></nav>
 <p class="hint">Excel'den kopyala → aşağıya yapıştır → <b>SQL Üret</b> → çıkan SQL'i Supabase &gt; SQL Editor'de çalıştır.<br>
 Eşleşme: her PAR'a kendinden sonraki ilk BOS verilir (en fazla 3 saat içinde). Eşleşmeyen PAR/BOS uyarı olarak listelenir. Gece yarısı (00:xx) saatler en sona alınır. Tur süresi 51 dk sabit.<br>
@@ -245,14 +272,23 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div class="card">
 <h2>🕵️ Süper Panel — her şey burada</h2>
 <div><button id="spYenileBtn">↻ Yenile</button> <span class="hint" id="spDurum"></span></div>
-<div id="spOzet" style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0"></div>
-<div id="spGrafik"></div>
+<div class="dilrow"><div><label>Başlangıç</label><input type="date" id="spBas"></div><div><label>Bitiş</label><input type="date" id="spBit"></div></div>
+<div id="spOzet" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"></div>
+<div class="bigraph"><h4>📊 GÜNLÜK AKTİFLİK</h4><div id="spGrafik"></div></div>
+<div class="bigraph"><h4>🍩 KADRO DURUMU (aralıkta görev alanlar)</h4><div class="donutwrap"><svg id="donutSvg" width="120" height="120" viewBox="0 0 120 120"></svg><div class="donutlej" id="donutLej"></div></div></div>
 <label>Kişi seç (detay)</label><select id="spKisi" style="width:100%"><option value="">—</option></select>
 <div id="spKisiDetay" style="margin-top:8px"></div>
-<h2 style="margin-top:14px">Son hareketler</h2>
+<h2 style="margin-top:14px">📡 Canlı Akış — son olaylar</h2>
+<p class="hint">Hattaki son hareketler: görev yükleme, mesaj, SOS, arıza, takas, test. En yeni üstte.</p>
 <div id="spZaman"></div>
 <h2 style="margin-top:14px">Okumayanlar (son duyuru + talimatlar)</h2>
 <div id="spOkuma"></div>
+</div>
+<div class="card">
+<h2>🟢 Aktif Kullanıcılar</h2>
+<div style="display:flex;gap:8px;align-items:end"><div style="flex:1"><label>Tarih</label><input type="date" id="kulTarih"></div><div style="flex:2"><label>Ara</label><input id="kulAra" autocomplete="off" placeholder="sicil / ad / görev"></div><div><button id="kulBtn" class="ghost">↻ Getir</button></div></div>
+<div class="hint" id="kulDurum">-</div>
+<table style="margin-top:8px"><thead><tr><th>Sicil</th><th>Ad</th><th>Görev</th><th>Başladı</th><th>Okunmamış</th><th>Son hareket</th></tr></thead><tbody id="kulListe"></tbody></table>
 </div>
 <div class="card">
 <h2>🚏 Toplu Hareket Yükle</h2>
@@ -336,6 +372,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const cfg=window.__SB__||{};
 const sb=createClient(cfg.URL,cfg.ANON_KEY);
 const $=id=>document.getElementById(id);
+const ysaat=iso=>{try{return new Date(iso).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}catch(e){return"-"}};
+const ydt=iso=>{try{const d=new Date(iso);return d.toLocaleDateString("tr-TR")+" "+d.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}catch(e){return"-"}};
 async function kilitAcikMi(){const{data}=await sb.auth.getSession();return !!(data&&data.session)}
 async function kilitKontrol(){
  const ok=await kilitAcikMi();
@@ -351,8 +389,27 @@ $("kBtn").onclick=async()=>{
  $("kDurum").textContent="";$("admKim").textContent="👤 "+$("kMail").value.trim();kilitKontrol();liste();
 };
 $("kCikisBtn").onclick=async()=>{await sb.auth.signOut();location.reload()};
+try{
+ const d=new Date(),p=n=>String(n).padStart(2,"0");
+ const b=new Date();b.setDate(b.getDate()-13);
+ $("spBas").value=`${b.getFullYear()}-${p(b.getMonth()+1)}-${p(b.getDate())}`;
+ $("spBit").value=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}catch(e){}
+setInterval(()=>{const s=$("topSaat");if(s)s.textContent=new Date().toLocaleTimeString("tr-TR")},1000);
+$("kulAra").oninput=()=>{
+ const q=($("kulAra").value||"").toLocaleLowerCase("tr");
+ document.querySelectorAll("#kulListe tr").forEach(tr=>{tr.style.display=tr.textContent.toLocaleLowerCase("tr").includes(q)?"":"none"});
+};
+$("bildirimAcBtn").onclick=async()=>{try{const p=await Notification.requestPermission();alert("Bildirim: "+p)}catch(e){alert(e.message)}};
+function uyariGoster(metin){
+ const b=$("uyariBar");b.textContent=metin;b.style.display="block";
+ clearTimeout(window._uyT);window._uyT=setTimeout(()=>b.style.display="none",12000);
+}
+function adminBildirim(baslik,metin){
+ try{if("Notification" in window&&Notification.permission==="granted"){try{new Notification(baslik,{body:metin})}catch(e){}}}catch(e){}
+};
 (function(){
-  const gruplar=[["🕵️ Panel",[6,10,15]],["📥 Veri",[0,1,5,7,8,9]],["👥 Kadro",[2,13]],["💬 İletişim",[3,4,11]],["📚 İçerik",[12,14]]];
+  const gruplar=[["🕵️ Panel",[6,7,11,16]],["📥 Veri",[0,1,5,8,9,10]],["👥 Kadro",[2,14]],["💬 İletişim",[3,4,12]],["📚 İçerik",[13,15]]];
  const nav=$("anav");if(!nav)return;nav.innerHTML="";
  function goster(i){
   const cards=document.querySelectorAll(".wrap>.card");
@@ -360,7 +417,7 @@ $("kCikisBtn").onclick=async()=>{await sb.auth.signOut();location.reload()};
   [...nav.children].forEach((b,k)=>b.classList.toggle("on",k===i));
   window.scrollTo({top:0});
  }
- gruplar.forEach(([ad],i)=>{const b=document.createElement("button");b.className="ghost";b.textContent=ad;b.onclick=()=>goster(i);nav.appendChild(b)});
+ gruplar.forEach(([ad],i)=>{const b=document.createElement("button");b.className="ghost";b.innerHTML=`${ad}<span class="roz" id="roz${i}"></span>`;b.onclick=()=>goster(i);nav.appendChild(b)});
  goster(0);
  const top=$("topBtn");
  window.addEventListener("scroll",()=>{top.classList.toggle("goster",window.scrollY>600)},{passive:true});
@@ -412,7 +469,7 @@ async function mListe(){
  if(!await _oturum()){alert("Önce yukarıdan admin girişi yap");return}
  const{data,error}=await sb.from("mesajlar").select("id,sicil,mesaj,okundu,okundu_at,created_at").eq("yon",0).order("created_at",{ascending:false}).limit(30);
  if(error){alert(error.message);return}
- $("mListe").innerHTML=(data||[]).map(m=>`<tr><td>${m.sicil}</td><td style="text-align:left;max-width:220px">${(m.mesaj||"").slice(0,80)}</td><td>${(m.created_at||"").slice(5,16).replace("T"," ")}</td><td>${m.okundu?"✅ "+(m.okundu_at||"").slice(5,16).replace("T"," "):"✖️"}</td><td><button class="ghost" onclick="mSil(${m.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=5>Mesaj yok</td></tr>";
+ $("mListe").innerHTML=(data||[]).map(m=>`<tr><td>${m.sicil}</td><td style="text-align:left;max-width:220px">${(m.mesaj||"").slice(0,80)}</td><td>${ydt(m.created_at)}</td><td>${m.okundu?"✅ "+ydt(m.okundu_at):"✖️"}</td><td><button class="ghost" onclick="mSil(${m.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=5>Mesaj yok</td></tr>";
 }
 window.mSil=async id=>{
  if(!confirm("Mesaj silinsin mi?"))return;
@@ -425,7 +482,7 @@ async function gkListe(){
  const p=await sb.from("personel").select("sicil,ad");const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
  const{data,error}=await sb.from("mesajlar").select("id,sicil,mesaj,created_at").eq("yon",1).order("created_at",{ascending:false}).limit(30);
  if(error){alert(error.message);return}
- $("gkListe").innerHTML=(data||[]).map(m=>`<tr><td>${m.sicil}<br><small>${ad[m.sicil]||""}</small></td><td style="text-align:left;max-width:200px">${(m.mesaj||"").slice(0,120)}</td><td>${(m.created_at||"").slice(5,16).replace("T"," ")}</td><td><button class="ghost" onclick="gkYanıt('${m.sicil}')">Yanıtla</button> <button class="ghost" onclick="mSil(${m.id});setTimeout(gkListe,500)">Sil</button></td></tr>`).join("")||"<tr><td colspan=4>Mesaj yok ✅</td></tr>";
+ $("gkListe").innerHTML=(data||[]).map(m=>`<tr><td>${m.sicil}<br><small>${ad[m.sicil]||""}</small></td><td style="text-align:left;max-width:200px">${(m.mesaj||"").slice(0,120)}</td><td>${ydt(m.created_at)}</td><td><button class="ghost" onclick="gkYanıt('${m.sicil}')">Yanıtla</button> <button class="ghost" onclick="mSil(${m.id});setTimeout(gkListe,500)">Sil</button></td></tr>`).join("")||"<tr><td colspan=4>Mesaj yok ✅</td></tr>";
 }
 window.gkYanıt=sicil=>{
  $("mSicil").value=sicil;$("mTxt").focus();
@@ -447,7 +504,7 @@ async function dListe(){
  const o=await sb.from("duyuru_okuma").select("duyuru_id").limit(2000);
  const say={};(o.data||[]).forEach(r=>say[r.duyuru_id]=(say[r.duyuru_id]||0)+1);
  const h={all:"Herkes","1":"H.İçi","2":"Cmt","3":"Paz"};
- $("dListe").innerHTML=(data||[]).map(d=>`<tr><td style="text-align:left;max-width:200px">${d.onemli?"🔴":""}${(d.mesaj||"").slice(0,80)}</td><td>${h[d.hedef]||d.hedef}</td><td>${(d.created_at||"").slice(5,16).replace("T"," ")}</td><td>${say[d.id]||0}</td><td><button class="ghost" onclick="dOnemli(${d.id},${d.onemli?0:1})">${d.onemli?"Normal":"Önemli"}</button> <button class="ghost" onclick="dSil(${d.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=5>Duyuru yok</td></tr>";
+ $("dListe").innerHTML=(data||[]).map(d=>`<tr><td style="text-align:left;max-width:200px">${d.onemli?"🔴":""}${(d.mesaj||"").slice(0,80)}</td><td>${h[d.hedef]||d.hedef}</td><td>${ydt(d.created_at)}</td><td>${say[d.id]||0}</td><td><button class="ghost" onclick="dOnemli(${d.id},${d.onemli?0:1})">${d.onemli?"Normal":"Önemli"}</button> <button class="ghost" onclick="dSil(${d.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=5>Duyuru yok</td></tr>";
 }
 window.dOnemli=async(id,v)=>{const{error}=await sb.from("duyurular").update({onemli:!!v}).eq("id",id);if(error)alert(error.message);else dListe()};
 window.dSil=async id=>{
@@ -468,7 +525,7 @@ async function arzListe2(){
  const p=await sb.from("personel").select("sicil,ad");const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
  const{data,error}=await sb.from("ariza").select("id,sicil,gorevno,aciklama,foto_url,durum,created_at").order("created_at",{ascending:false}).limit(50);
  if(error){alert(error.message);return}
- $("arzListe2").innerHTML=(data||[]).map(r=>`<tr><td>${r.sicil}<br><small>${ad[r.sicil]||""}</small></td><td style="text-align:left;max-width:200px">${(r.aciklama||"").slice(0,120)}</td><td>${r.foto_url?`<a href="${r.foto_url}" target="_blank">📷</a>`:"—"}</td><td>${(r.created_at||"").slice(5,16).replace("T"," ")}</td><td>${r.durum==="acik"?'<span class="pill warn">Açık</span>':'<span class="pill ok">Kapandı</span>'}</td><td><button class="ghost" onclick="arzKapat(${r.id},'${r.durum}')">${r.durum==="acik"?"Kapat":"Aç"}</button> <button class="ghost" onclick="arzSil(${r.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=6>Arıza yok ✅</td></tr>";
+ $("arzListe2").innerHTML=(data||[]).map(r=>`<tr><td>${r.sicil}<br><small>${ad[r.sicil]||""}</small></td><td style="text-align:left;max-width:200px">${(r.aciklama||"").slice(0,120)}</td><td>${r.foto_url?`<a href="${r.foto_url}" target="_blank">📷</a>`:"—"}</td><td>${ydt(r.created_at)}</td><td>${r.durum==="acik"?'<span class="pill warn">Açık</span>':'<span class="pill ok">Kapandı</span>'}</td><td><button class="ghost" onclick="arzKapat(${r.id},'${r.durum}')">${r.durum==="acik"?"Kapat":"Aç"}</button> <button class="ghost" onclick="arzSil(${r.id})">Sil</button></td></tr>`).join("")||"<tr><td colspan=6>Arıza yok ✅</td></tr>";
 }
 window.arzKapat=async(id,durum)=>{const{error}=await sb.from("ariza").update({durum:durum==="acik"?"kapandi":"acik"}).eq("id",id);if(error)alert(error.message);else arzListe2()};
 window.arzSil=async id=>{if(!confirm("Arıza kaydı silinsin mi?"))return;const{error}=await sb.from("ariza").delete().eq("id",id);if(error)alert(error.message);else arzListe2()};
@@ -479,7 +536,7 @@ async function sosListe(sessiz){
  const max=data.length?Math.max(...data.map(r=>r.id)):0;
  if(sessiz&&max>_sosMax&&_sosMax>0)sosBeep();
  _sosMax=Math.max(_sosMax,max);
- $("sosListe").innerHTML=(data||[]).map(r=>`<tr style="${r.id===max?"background:#451a03":""}"><td>${r.sicil}</td><td>${r.gorevno||"-"}</td><td>${(r.created_at||"").slice(5,16).replace("T"," ")}</td><td><button class="ghost" onclick="sosSil(${r.id})">Kapat</button></td></tr>`).join("")||"<tr><td colspan=4>Acil durum yok ✅</td></tr>";
+ $("sosListe").innerHTML=(data||[]).map(r=>`<tr style="${r.id===max?"background:#451a03":""}"><td>${r.sicil}</td><td>${r.gorevno||"-"}</td><td>${ydt(r.created_at)}</td><td><button class="ghost" onclick="sosSil(${r.id})">Kapat</button></td></tr>`).join("")||"<tr><td colspan=4>Acil durum yok ✅</td></tr>";
 }
 window.sosSil=async id=>{
  if(!confirm("Kayıt kapatılsın mı?"))return;
@@ -487,8 +544,39 @@ window.sosSil=async id=>{
  if(error)alert(error.message);else sosListe();
 };
 setInterval(()=>sosListe(true),30000);
-const chip=t=>{const m=t.match(/^(\S+)\s+(.*)$/);return `<span style="background:linear-gradient(160deg,#1e293b,#16233f);border:1px solid #334155;border-radius:14px;padding:10px 14px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3)">${m?`<b style="font-size:16px">${m[1]}</b> <span style="color:#93a3b8">${m[2]}</span>`:t}</span>`};
+function rozetKoy(i,n){const r=$("roz"+i);if(!r)return;if(n>0){r.textContent=n>99?"99+":n;r.classList.add("var")}else{r.textContent="";r.classList.remove("var")}}
+let _wd={ilk:true,once:{msg:0,sos:[],arz:[],tak:[]}};
+async function bekci(){
+ if(!await _oturum())return;
+ try{
+  const m=await sb.from("mesajlar").select("id").eq("yon",1).eq("okundu",false).limit(200);
+  const s=await sb.from("sos").select("id").order("id",{ascending:false}).limit(20);
+  const a=await sb.from("ariza").select("id").eq("durum","acik").limit(200);
+  const t=await sb.from("takas").select("id").eq("durum","bekliyor").limit(200);
+  const yen={msg:(m.data||[]).length,sos:(s.data||[]).map(x=>x.id),arz:(a.data||[]).map(x=>x.id),tak:(t.data||[]).map(x=>x.id)};
+  const once=_wd.once;
+  const ySos=yen.sos.filter(id=>!once.sos.includes(id));
+  const yArz=yen.arz.filter(id=>!once.arz.includes(id));
+  const yTak=yen.tak.filter(id=>!once.tak.includes(id));
+  _wd.once=yen;
+  rozetKoy(0,yen.sos.length);rozetKoy(2,yen.tak.length);rozetKoy(3,yen.msg);rozetKoy(4,yen.arz.length);
+  if(_wd.ilk){_wd.ilk=false;return}
+  const msj=[];
+  if(ySos.length)msj.push(`🆘 ${ySos.length} yeni SOS`);
+  if(yArz.length)msj.push(`🔧 ${yArz.length} yeni arıza`);
+  if(yTak.length)msj.push(`🔄 ${yTak.length} takas talebi`);
+  if(yen.msg>once.msg)msj.push(`✉️ ${yen.msg-once.msg} yeni mesaj`);
+  if(!msj.length)return;
+  uyariGoster(msj.join(" • "));
+  try{const C=new (window.AudioContext||window.webkitAudioContext)();[0,0.4].forEach(t=>{const o=C.createOscillator(),g=C.createGain();o.type="square";o.frequency.value=740;o.connect(g);g.connect(C.destination);g.gain.setValueAtTime(0.001,C.currentTime+t);g.gain.exponentialRampToValueAtTime(0.2,C.currentTime+t+0.03);g.gain.exponentialRampToValueAtTime(0.001,C.currentTime+t+0.3);o.start(C.currentTime+t);o.stop(C.currentTime+t+0.32)})}catch(e){}
+  adminBildirim("MakinistTakip Admin",msj.join("\n"));
+ }catch(e){}
+}
+setInterval(()=>{if(!document.body.classList.contains("kilitli"))bekci()},30000);
+const chip=(t,cls)=>{const m=t.match(/^(\S+)\s+(\d+)\s+(.*)$/);return m?`<span class="kpi ${cls||""}"><span class="ic">${m[1]}</span><span><span class="sayi">${m[2]}</span><span class="etk">${m[3]}</span></span></span>`:`<span class="kpi ${cls||""}"><span class="ic">•</span><span><span class="sayi">-</span><span class="etk">${t}</span></span></span>`};
 $("spYenileBtn").onclick=()=>spYenile(false);
+$("kulBtn").onclick=()=>kullaniciListe();
+setInterval(()=>{if(!document.body.classList.contains("kilitli"))kullaniciListe()},120000);
 setInterval(()=>{if(!document.body.classList.contains("kilitli"))spYenile(true)},60000);
 async function spYenile(sessiz){
  if(!await _oturum()){if(!sessiz)alert("Önce giriş yap");return}
@@ -499,7 +587,8 @@ async function spYenile(sessiz){
   const p=await sb.from("personel").select("sicil,ad,aktif").order("sicil");
   const per=(p.data||[]),ad={};per.forEach(x=>ad[x.sicil]=x.ad);
   const aktif=per.filter(x=>x.aktif!==false);
-  const g=await sb.from("gorev_log").select("sicil,gorevno,tarih,created_at").order("created_at",{ascending:false}).limit(400);
+  const fb=($("spBas")&&$("spBas").value)||T,fe=($("spBit")&&$("spBit").value)||T;
+  const g=await sb.from("gorev_log").select("sicil,gorevno,tarih,created_at").gte("tarih",fb).lte("tarih",fe).order("created_at",{ascending:false}).limit(2000);
   const gl=g.data||[];
   const bugun=gl.filter(r=>r.tarih===T);
   const v=await sb.from("vardiya_baslama").select("sicil,saat").eq("tarih",T).limit(200);
@@ -508,24 +597,38 @@ async function spYenile(sessiz){
   const okunmamis=(m.data||[]).filter(r=>!r.okundu).length;
   const tk=await sb.from("takas").select("id").eq("durum","bekliyor").limit(100);
   const s=await sb.from("sos").select("id").gte("created_at",T+"T00:00:00").limit(50);
-  $("spOzet").innerHTML=chip(`👥 ${aktif.length} personel`)+chip(`🟢 Bugün aktif: ${new Set(bugun.map(r=>r.sicil)).size}`)+chip(`✅ Başlayan: ${basl.size}`)+chip(`✖️ Okunmamış mesaj: ${okunmamis}`)+chip(`⏳ Takas: ${(tk.data||[]).length}`)+chip(`🆘 SOS: ${(s.data||[]).length}`);
+  const aralikKisi=new Set(gl.map(r=>r.sicil)).size;
+  $("spOzet").innerHTML=chip(`👥 ${aktif.length} personel`)+chip(`🟢 ${aralikKisi} aralıkta aktif`,"")+chip(`✅ ${basl.size} bugün başladı`,"")+chip(`✖️ ${okunmamis} okunmamış`,"kirmizi")+chip(`⏳ ${tk.data.length} takas`,"sari")+chip(`🆘 ${s.data.length} SOS`,"kirmizi");
   try{
-   const gunler=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);gunler.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"))}
+   const gunler=[];{const a=new Date(fb+"T12:00:00"),b=new Date(fe+"T12:00:00");for(let d=new Date(a);d<=b;d.setDate(d.getDate()+1))gunler.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"))}
    const sayG={};gl.forEach(r=>{sayG[r.tarih]=(sayG[r.tarih]||0)+1});
    const maks=Math.max(1,...gunler.map(g2=>sayG[g2]||0));
    const q=await sb.from("sinav_sonuc").select("dogru").order("created_at",{ascending:false}).limit(60);
    const ort=(q.data||[]).length?((q.data||[]).reduce((a,r)=>a+r.dogru,0)/(q.data||[]).length).toFixed(1):"-";
-   $("spGrafik").innerHTML=`<p class="hint">Son 7 gün aktiflik + quiz ort: <b>${ort}</b></p><div style="display:flex;align-items:flex-end;gap:4px;height:70px">`+gunler.map(g2=>{const v=sayG[g2]||0;return `<div title="${g2}: ${v}" style="flex:1;border-radius:4px;min-height:5px;height:${Math.round(v/maks*100)}%;background:var(--accent, #22c55e)"></div>`}).join("")+`</div><p class="hint">${gunler.map(g2=>g2.slice(8)).join(" ")}</p>`;
+   $("spGrafik").innerHTML=`<div class="bar14">`+gunler.slice(-14).map(g2=>{const v2=sayG[g2]||0;return `<div title="${g2}: ${v2}" style="height:${Math.max(6,Math.round(v2/maks*100))}%"></div>`}).join("")+`</div><p class="hint">${gunler.length} gün • quiz ort: <b>${ort}</b></p>`;
+   const pasif=aktif.length-aralikKisi;
+   const C=2*Math.PI*44,top2=aralikKisi+pasif||1;
+   const d1=aralikKisi/top2*C,d2=pasif/top2*C;
+   $("donutSvg").innerHTML=`<circle cx="60" cy="60" r="44" fill="none" stroke="#1e293b" stroke-width="18"/><circle cx="60" cy="60" r="44" fill="none" stroke="#22c55e" stroke-width="18" stroke-dasharray="${d1} ${C}" transform="rotate(-90 60 60)"/><circle cx="60" cy="60" r="44" fill="none" stroke="#64748b" stroke-width="18" stroke-dasharray="${d2} ${C}" stroke-dashoffset="${-d1}" transform="rotate(-90 60 60)"/><text x="60" y="66" text-anchor="middle" fill="#f1f5f9" font-size="20" font-weight="900">${aralikKisi}</text>`;
+   $("donutLej").innerHTML=`🟢 Aktif: ${aralikKisi}<br>⚪ Pasif: ${pasif}<br>📝 Quiz ort: ${ort}`;
   }catch(e){}
   const sel=$("spKisi"),onceki=sel.value;
   sel.innerHTML=`<option value="">—</option>`+aktif.map(x=>`<option value="${x.sicil}">${x.sicil} - ${x.ad}</option>`).join("");
   if(onceki)sel.value=onceki;
   window._adM=ad;spKisiDetay(ad);
   const ev=[];
-  (s.data||[]).forEach(r=>ev.push({z:"bugün",t:"🆘 SOS",k:"-"}));
-  (m.data||[]).slice(0,15).forEach(r=>ev.push({z:(r.created_at||"").slice(5,16).replace("T"," "),t:(r.okundu?"✅":"✖️")+" mesaj → "+r.sicil,k:r.sicil}));
-  gl.slice(0,20).forEach(r=>ev.push({z:(r.created_at||"").slice(5,16).replace("T"," "),t:`📥 ${r.sicil} görev ${r.gorevno}`,k:r.sicil}));
-  ev.sort((a,b)=>a.z<b.z?1:-1);
+  (s.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:"bugün",t:"🆘 SOS",k:"-"}));
+  (m.data||[]).slice(0,15).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:(r.okundu?"✅":"✖️")+" mesaj → "+r.sicil,k:r.sicil}));
+  gl.slice(0,20).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`📥 ${r.sicil} görev ${r.gorevno}`,k:r.sicil}));
+  try{
+   const sx=await sb.from("sos").select("sicil,created_at").order("created_at",{ascending:false}).limit(10);
+   (sx.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🆘 SOS ${r.sicil}`,k:r.sicil}));
+   const ax=await sb.from("ariza").select("sicil,created_at").order("created_at",{ascending:false}).limit(10);
+   (ax.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🔧 Arıza ${r.sicil}`,k:r.sicil}));
+   const tx=await sb.from("takas").select("isteyen_sicil,created_at").order("created_at",{ascending:false}).limit(10);
+   (tx.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🔄 Takas ${r.isteyen_sicil}`,k:r.isteyen_sicil}));
+  }catch(e){}
+  ev.sort((a,b)=>b.ts-a.ts);
   $("spZaman").innerHTML=`<table><thead><tr><th>Zaman</th><th>Olay</th></tr></thead><tbody>`+ev.slice(0,25).map(e=>`<tr><td>${e.z}</td><td style="text-align:left">${e.t}</td></tr>`).join("")+`</tbody></table>`;
   const d=await sb.from("duyurular").select("id,mesaj").order("created_at",{ascending:false}).limit(1);
   const o=await sb.from("duyuru_okuma").select("duyuru_id,sicil").limit(2000);
@@ -536,7 +639,26 @@ async function spYenile(sessiz){
   (t.data||[]).slice(0,5).forEach(x=>{const okS=new Set(to.data.filter(r=>r.talimat_id===x.id).map(r=>r.sicil));const yok=aktif.filter(p2=>!okS.has(p2.sicil));oh+=`<p class="hint">📋 ${x.baslik} — okumayan (${yok.length}): ${yok.slice(0,15).map(p2=>p2.sicil).join(", ")||"yok ✅"}${yok.length>15?"...":""}</p>`});
   $("spOkuma").innerHTML=oh||'<p class="hint">Veri yok</p>';
   $("spDurum").textContent="✅ "+new Date().toLocaleTimeString("tr-TR");
+  kullaniciListe();
  }catch(e){$("spDurum").textContent="🔴 "+e.message}
+}
+async function kullaniciListe(){
+ try{
+  const d=new Date(),defT=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const ki=$("kulTarih");if(ki&&!ki.value)ki.value=defT;
+  const T=(ki&&ki.value)||defT;
+  const p=await sb.from("personel").select("sicil,ad").eq("aktif",true).order("sicil");
+  const per=p.data||[];
+  const g=await sb.from("gorev_log").select("sicil,gorevno,created_at").eq("tarih",T).limit(500);
+  const byG={};(g.data||[]).forEach(r=>{byG[r.sicil]=r});
+  const v=await sb.from("vardiya_baslama").select("sicil,saat").eq("tarih",T).limit(500);
+  const byV={};(v.data||[]).forEach(r=>byV[r.sicil]=r.saat);
+  const m=await sb.from("mesajlar").select("sicil").eq("okundu",false).limit(300);
+  const unm={};(m.data||[]).forEach(r=>unm[r.sicil]=(unm[r.sicil]||0)+1);
+  const aktifler=per.filter(x=>byG[x.sicil]);
+  $("kulDurum").textContent=`${aktifler.length} kişi aktif`;
+  $("kulListe").innerHTML=aktifler.map(x=>{const r=byG[x.sicil];return `<tr><td>${x.sicil}</td><td style="text-align:left">${x.ad}</td><td>Görev ${r.gorevno}</td><td>${byV[x.sicil]?String(byV[x.sicil]).slice(0,5):"—"}</td><td>${unm[x.sicil]||0}</td><td>${ysaat(r.created_at)}</td></tr>`}).join("")||"<tr><td colspan=6>Bugün kimse yok</td></tr>";
+ }catch(e){}
 }
 $("spKisi").onchange=()=>spKisiDetay(window._adM);
 async function spKisiDetay(adMap){
@@ -594,7 +716,7 @@ $("sSonucBtn").onclick=async()=>{
  const p=await sb.from("personel").select("sicil,ad");const ad={};(p.data||[]).forEach(x=>ad[x.sicil]=x.ad);
  const{data,error}=await sb.from("sinav_sonuc").select("sicil,dogru,yanlis,created_at").order("created_at",{ascending:false}).limit(50);
  if(error){alert(error.message);return}
- $("sAlan").innerHTML=`<table><thead><tr><th>Sicil</th><th>Ad</th><th>Doğru/Yanlış</th><th>Zaman</th></tr></thead><tbody>`+(data||[]).map(r=>`<tr><td>${r.sicil}</td><td style="text-align:left">${ad[r.sicil]||"-"}</td><td>${r.dogru}/${r.yanlis}</td><td>${(r.created_at||"").slice(0,16).replace("T"," ")}</td></tr>`).join("")+`</tbody></table>`;
+ $("sAlan").innerHTML=`<table><thead><tr><th>Sicil</th><th>Ad</th><th>Doğru/Yanlış</th><th>Zaman</th></tr></thead><tbody>`+(data||[]).map(r=>`<tr><td>${r.sicil}</td><td style="text-align:left">${ad[r.sicil]||"-"}</td><td>${r.dogru}/${r.yanlis}</td><td>${ydt(r.created_at)}</td></tr>`).join("")+`</tbody></table>`;
 };
 $("tkYenileBtn").onclick=tkListe2;
 async function tkListe2(){
