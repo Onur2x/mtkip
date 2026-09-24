@@ -523,7 +523,7 @@ async function girisYap(){
   }
   const h=await sifreHashla(sicil,sifre);
   if(h!==kayit.sifre_hash){loginHata("Şifre hatalı");return}
-  store.personel={sicil,ad:data.ad};persist();
+  store.personel={sicil,ad:data.ad,sifre_degisti:true};persist();
   $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
  }finally{$("girisBtn").textContent="🔑 Giriş"}
 }
@@ -549,14 +549,24 @@ async function sifreKaydet(){
  $("inSifre").value="";
  loginHata("");
  alert("✅ Şifren kaydedildi. Bundan sonra giriş için kendi şifreni kullan.");
- store.personel={sicil:b.sicil,ad:b.ad};persist();
+ store.personel={sicil:b.sicil,ad:b.ad,sifre_degisti:true};persist();
  $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
 }
 $("sfBtn").onclick=sifreKaydet;
 $("sfYeni").onkeydown=e=>{if(e.key==="Enter")$("sfTekrar").focus()};
 $("sfTekrar").onkeydown=e=>{if(e.key==="Enter")sifreKaydet()};
 $("girisBtn").onclick=girisYap;
-$("cevrimdisiBtn").onclick=()=>{const s=$("inSicil").value.trim();if(!s){loginHata("Önce sicil yaz");return}store.personel={sicil:s,ad:"(çevrimdışı)"};persist();$("loginModal").classList.remove("acik")};
+$("cevrimdisiBtn").onclick=()=>{
+ const s=$("inSicil").value.trim();
+ if(!s){loginHata("Önce sicil yaz");return}
+ if(store.personel&&store.personel.sicil===s&&store.personel.sifre_degisti===true){
+  store.personel={sicil:s,ad:store.personel.ad||"(çevrimdışı)",sifre_degisti:true};persist();
+  $("loginModal").classList.remove("acik");return;
+ }
+ if(!confirm("Çevrimdışı girişte şifre kontrolü yapılamaz.\n\nBu cihazda şifren henüz kayıtlı değilse herkes sicilini yazarak girebilir. Yine de devam edilsin mi?"))return;
+ store.personel={sicil:s,ad:"(çevrimdışı)"};persist();
+ $("loginModal").classList.remove("acik");
+};
 function bugun(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function seriHesapla(){try{const gun=new Set((store.gecmis||[]).map(x=>x.tarih));if(!gun.size)return 0;const d=new Date();const f=z=>z.getFullYear()+"-"+String(z.getMonth()+1).padStart(2,"0")+"-"+String(z.getDate()).padStart(2,"0");if(!gun.has(f(d)))d.setDate(d.getDate()-1);let n=0;while(gun.has(f(d))){n++;d.setDate(d.getDate()-1)}return n}catch(e){return 0}}
 async function havaGetir(){try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=40.95&longitude=29.09&current=temperature_2m,weather_code&timezone=auto");const j=await r.json();const t=Math.round(j.current.temperature_2m),k=j.current.weather_code;const e=k===0?"☀️":k<=3?"⛅":k<=48?"🌫️":k<=57?"🌦️":k<=67?"🌧️":k<=77?"🌨️":k<=82?"🌧️":"⛈️";$("havaTxt").textContent=`${e} ${t}°`}catch(e){}}
@@ -1123,9 +1133,28 @@ havaGetir();setInterval(havaGetir,30*60*1000);
 baglantiKontrol();setInterval(baglantiKontrol,60000);
 sahaGetir();setInterval(sahaGetir,5*60*1000);
 tarifeGetir();setInterval(tarifeGetir,60000);
+async function otoGirisSifreKontrol(){
+ const p=store.personel;
+ if(!p||!p.sicil)return true;
+ const sb=sbClient();
+ if(!sb)return true;
+ if(p.sifre_degisti===true)return true;
+ try{
+  const r=await sb.from("personel_sifre").select("sifre_degisti").eq("sicil",String(p.sicil)).maybeSingle();
+  if(r.error)return true;
+  if(r.data&&r.data.sifre_degisti){p.sifre_degisti=true;persist();return true}
+  store.personel=null;persist();
+  $("inSicil").value=String(p.sicil);
+  $("loginModal").classList.add("acik");
+  $("inAciklama").textContent="Bu cihazda otomatik giriş yapılmış — ancak şifren henüz belirlenmemiş. Önce şifreni oluştur.";
+  sifreModalAc(String(p.sicil),p.ad||"—");
+  return false;
+ }catch(e){return true}
+}
 if(store.personel)cizelgeGetir();
 baslamaKontrol();
 if(!store.personel)$("loginModal").classList.add("acik");
+otoGirisSifreKontrol();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
