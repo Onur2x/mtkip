@@ -14,9 +14,14 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;b
 .yan .mark b{font-size:15px;display:block;line-height:1.2}
 .yan .mark i{font-size:11px;color:#7d8ea8;font-style:normal}
 .yan .bas{font-size:10px;letter-spacing:2px;color:#5f708a;padding:14px 10px 6px;font-weight:800}
-.yan button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:transparent;border:1px solid transparent;color:#b7c4d6;font-size:13.5px;font-weight:700;padding:10px 12px;border-radius:10px;margin:2px 0;cursor:pointer;position:relative;transition:.15s}
-.yan button:hover{background:#16233f;color:#fff}
-.yan button.on{background:linear-gradient(90deg,rgba(34,197,94,.22),rgba(34,197,94,.04));border-color:rgba(34,197,94,.4);color:#fff}
+.yan button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:transparent;border:1px solid transparent;color:#7d8ea8;font-size:13.5px;font-weight:700;padding:11px 12px 11px 15px;border-radius:10px;margin:2px 0;cursor:pointer;position:relative;transition:background .15s,color .15s,border-color .15s}
+.yan button::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%) scaleY(0);width:4px;height:22px;border-radius:0 4px 4px 0;background:#22c55e;transition:transform .18s}
+.yan button:hover{background:#16233f;color:#dbe6f3}
+.yan button:hover::before{transform:translateY(-50%) scaleY(.5)}
+.yan button.on{background:linear-gradient(90deg,rgba(34,197,94,.26),rgba(34,197,94,.04));border-color:rgba(34,197,94,.5);color:#fff}
+.yan button.on::before{transform:translateY(-50%) scaleY(1)}
+.yan button.on .ri{filter:drop-shadow(0 0 6px rgba(34,197,94,.8))}
+.yan:not(:has(.on)) button{color:#5f708a}
 .yan button .ri{font-size:16px;width:20px;text-align:center}
 .yan button .roz{display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:900;min-width:19px;height:19px;line-height:19px;border-radius:99px;text-align:center;padding:0 5px}
 .yan button .roz.var{display:block;animation:nab2 1.4s infinite}
@@ -132,6 +137,8 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.02)}
 .sekici{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
 .sekici button{padding:6px 11px;font-size:11.5px;border-radius:99px;background:#1e293b;color:#9fb0c7;border:1px solid #334155;font-weight:700}
 .sekici button.on{background:#38bdf8;color:#082f49;border-color:#38bdf8}
+#topBtn{display:none;position:fixed;right:14px;bottom:14px;z-index:70;width:46px;height:46px;border-radius:99px;font-size:19px;padding:0;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+#topBtn.goster{display:block}
 .bigraph{background:linear-gradient(180deg,#16233f,#111c33);border:1px solid #1e293b;border-radius:13px;padding:13px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .bigraph h3{margin:0 0 10px;font-size:11.5px;color:#9fb0c7;letter-spacing:1.2px;font-weight:800}
 .bar14{display:flex;align-items:flex-end;gap:5px;height:104px}
@@ -1697,7 +1704,7 @@ $("ayPdfBtn").onclick=async()=>{
   const icerik=$("icerik");
   const kartlar=[...document.querySelectorAll(".card")];
   const HARITA={0:"tarife",1:"tarife",2:"kadro",3:"kadro",4:"iletisim",5:"panel",6:"iletisim",7:"tarife",8:"panel",9:"panel",10:"tarife",11:"tarife",12:"iletisim",13:"tarife",14:"tarife",15:"iletisim",16:"icerik",17:"icerik",18:"iletisim",19:"icerik",20:"kadro"};
-  const yer={},kisa={};SEK.forEach(s=>{yer[s.id]=document.createElement("section");kisa[s.kisa]=yer[s.id]});
+  const yer={},kisa={};SEK.forEach(s=>{const sec=document.createElement("section");sec.className="sek";yer[s.id]=sec;kisa[s.kisa]=sec});
   yer["s-panel"].className="sek on";
   SEK.forEach(s=>{yer[s.id].id=s.id;icerik.appendChild(yer[s.id])});
   const ip=$("ipucu");if(ip)kisa.tarife.appendChild(ip);
