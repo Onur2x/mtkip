@@ -338,6 +338,12 @@ button:active::after{animation:ripple .55s}
 <div class="btnrow"><button id="bildirimBtn">🔔 Bildirim İzni</button><button id="testBtn" class="ghost">Test</button></div>
 <div class="btnrow"><button id="kaydetBtn">💾 Kaydet</button><button id="cikisBtn" class="ghost">🚪 Çıkış</button></div>
 </div>
+<div class="card"><h3>🔒 CİHAZ KİLİDİ</h3>
+<p class="hint" style="font-size:12px;opacity:.75;margin:0 0 8px">Bu telefon kaybolursa veya başkası eline geçerse, uygulamayı açmak için 4 haneli PIN ister. PIN sadece bu cihazda saklanır.</p>
+<div id="pinDurum" class="hint" style="margin-bottom:8px">-</div>
+<label>Yeni PIN (4 hane)<input id="pinYeni" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></label>
+<div class="btnrow"><button id="pinAktifBtn" class="ghost">🔒 PIN Kur</button><button id="pinKaldirBtn" class="ghost">🔓 PIN Kaldır</button></div>
+</div>
 </section>
 </main>
 <div id="loginModal" class="login-modal">
@@ -351,6 +357,17 @@ button:active::after{animation:ripple .55s}
 <div class="btnrow"><button id="girisBtn">🔑 Giriş</button></div>
 <div class="btnrow"><button id="cevrimdisiBtn" class="ghost">Çevrimdışı Gir</button></div>
 <div class="btnrow"><button id="unuttumBtn" class="ghost">🔔 Şifremi Unuttum</button></div>
+<div class="hint" id="kilitDurum" style="text-align:center;margin-top:8px"></div>
+</div>
+</div>
+<div id="pinModal" class="login-modal">
+<div class="login-box">
+<div class="logo">📱</div>
+<h2>Cihaz Kilidi</h2>
+<p id="pinAciklama">Bu cihazı açmak için 4 haneli PIN gir.</p>
+<input id="pinGir" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
+<div class="login-err" id="pinHata"></div>
+<div class="btnrow"><button id="pinBtn">🔓 Aç</button></div>
 </div>
 </div>
 <div id="unuttumModal" class="login-modal">
@@ -509,6 +526,40 @@ function sifreHashla(sicil,sifre){
  return Promise.resolve("y"+((h1>>>0).toString(16))+((h2>>>0).toString(16))+tuz.length.toString(16));
 }
 let _sifreBekle=null;
+const KILIT_DK=15,KILIT_MAX=5;
+async function kilitKontrol(sicil){
+ const sb=sbClient();if(!sb)return null;
+ try{
+  const r=await sb.from("giris_deneme").select("basarisiz,son_deneme,kilitli,kilit_bitis").eq("sicil",String(sicil)).maybeSingle();
+  if(r.error||!r.data)return null;
+  const d=r.data;
+  if(d.kilitli){
+   if(d.kilit_bitis&&new Date(d.kilit_bitis)<=new Date()){
+    await sb.from("giris_deneme").update({basarisiz:0,kilitli:false,kilit_bitis:null}).eq("sicil",String(sicil));
+    return null;
+   }
+   const kalan=d.kilit_bitis?Math.max(1,Math.ceil((new Date(d.kilit_bitis)-Date.now())/60000)):KILIT_DK;
+   return{kilit:true,kalan};
+  }
+  if(d.basarisiz>=KILIT_MAX)return{kilit:true,kalan:0};
+  return null;
+ }catch(e){return null}
+}
+async function kilitArtir(sicil,basarili){
+ const sb=sbClient();if(!sb)return;
+ try{
+  if(basarili){
+   await sb.from("giris_deneme").upsert({sicil:String(sicil),basarisiz:0,kilitli:false,kilit_bitis:null,son_deneme:new Date().toISOString()});
+   return;
+  }
+  const r=await sb.from("giris_deneme").select("basarisiz,son_deneme").eq("sicil",String(sicil)).maybeSingle();
+  let n=r.data&&r.data.data&&r.data.data.basarisiz?r.data.data.basarisiz+1:1;
+  const eski=r.data&&r.data.data?new Date(r.data.data.son_deneme).getTime():0;
+  if(Date.now()-eski>KILIT_DK*60000)n=1;
+  const kilitli=n>=KILIT_MAX;
+  await sb.from("giris_deneme").upsert({sicil:String(sicil),basarisiz:n,kilitli,kilit_bitis:kilitli?new Date(Date.now()+KILIT_DK*60000).toISOString():null,son_deneme:new Date().toISOString()});
+ }catch(e){}
+}
 async function girisYap(){
  const sicil=$("inSicil").value.trim(),sifre=$("inSifre").value.trim();
  if(!sicil||!sifre){loginHata("Sicil ve şifre gerekli");return}
@@ -516,27 +567,52 @@ async function girisYap(){
  if(!sb){loginHata("Bağlantı yok — Çevrimdışı Gir'i kullan");return}
  loginHata("");$("girisBtn").textContent="⏳ ...";
  try{
+  const kilit=await kilitKontrol(sicil);
+  if(kilit){
+   loginHata(kilit.kalan?`🔒 Çok fazla hatalı deneme — ${kilit.kalan} dk sonra dene`:"🔒 Hesap geçici olarak kilitlendi");
+   $("girisBtn").textContent="🔑 Giriş";return;
+  }
   const {data,error}=await sb.from("personel").select("ad,aktif").eq("sicil",sicil).maybeSingle();
-  if(error||!data){loginHata("Sicil bulunamadı");return}
-  if(data.aktif===false){loginHata("Hesap pasif");return}
-  let kayit=null,tblHata=false;
+  if(error||!data){
+   await kilitArtir(sicil,false);
+   loginHata("Sicil bulunamadı");
+   $("girisBtn").textContent="🔑 Giriş";return;
+  }
+  if(data.aktif===false){
+   await kilitArtir(sicil,false);
+   loginHata("Hesap pasif");
+   $("girisBtn").textContent="🔑 Giriş";return;
+  }
+  let tblHata=false,belirlendi=false;
   try{
-   const r=await sb.from("personel_sifre").select("sifre_hash,sifre_degisti").eq("sicil",sicil).maybeSingle();
-   if(r.error)tblHata=true;else kayit=r.data;
+   const r=await sb.rpc("sifre_belirlendi_mi",{p_sicil:sicil});
+   if(r.error)tblHata=true;else belirlendi=!!r.data;
   }catch(e){tblHata=true}
   if(tblHata){
-   if(sifre!==sicil){loginHata("Şifre = sicil olmalı (ilk giriş)");return}
+   if(sifre!==sicil){loginHata("Şifre = sicil olmalı (ilk giriş)");$("girisBtn").textContent="🔑 Giriş";return}
    store.personel={sicil,ad:data.ad};persist();
    $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
    return;
   }
-  if(!kayit||!kayit.sifre_degisti){
-   if(sifre!==sicil){loginHata("İlk giriş için şifre = sicil numaran");return}
+  if(!belirlendi){
+   if(sifre!==sicil){loginHata("İlk giriş için şifre = sicil numaran");$("girisBtn").textContent="🔑 Giriş";return}
    sifreModalAc(sicil,data.ad);
    return;
   }
   const h=await sifreHashla(sicil,sifre);
-  if(h!==kayit.sifre_hash){loginHata("Şifre hatalı");return}
+  let sonuc=null;
+  try{
+   const r=await sb.rpc("sifre_giris_kontrol",{p_sicil:sicil,p_hash:h});
+   if(r.error)throw r.error;
+   sonuc=r.data;
+  }catch(e){
+   loginHata("Şifre kontrolü yapılamadı (sunucu)");$("girisBtn").textContent="🔑 Giriş";return;
+  }
+  if(!sonuc||!sonuc.ok){
+   if(sonuc&&sonuc.kilitli)loginHata(`🔒 Çok fazla hatalı deneme — ${sonuc.kalan_dk} dk sonra dene`);
+   else loginHata("Şifre hatalı");
+   $("girisBtn").textContent="🔑 Giriş";return;
+  }
   store.personel={sicil,ad:data.ad,sifre_degisti:true};persist();
   $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
  }finally{$("girisBtn").textContent="🔑 Giriş"}
@@ -557,14 +633,59 @@ async function sifreKaydet(){
  if(y!==t){sfHata("Şifreler eşleşmiyor");return}
  const sb=sbClient();if(!sb){sfHata("Bağlantı yok");return}
  const h=await sifreHashla(b.sicil,y);
- const {error}=await sb.from("personel_sifre").upsert({sicil:b.sicil,sifre_hash:h,sifre_degisti:true,guncellendi:new Date().toISOString()});
- if(error){sfHata("🔴 "+error.message);return}
+ let r=await sb.rpc("sifre_kaydet",{p_sicil:b.sicil,p_hash:h});
+ if(r.error)r=await sb.from("personel_sifre").upsert({sicil:b.sicil,sifre_hash:h,sifre_degisti:true,guncellendi:new Date().toISOString()});
+ if(r.error){sfHata("🔴 "+r.error.message);return}
  $("sifreModal").classList.remove("acik");
  $("inSifre").value="";
  loginHata("");
  alert("✅ Şifren kaydedildi. Bundan sonra giriş için kendi şifreni kullan.");
  store.personel={sicil:b.sicil,ad:b.ad,sifre_degisti:true};persist();
  $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
+}
+function pinCiz(){
+ const el=$("pinDurum");
+ if(!el)return;
+ const v=localStorage.getItem("mt8_pin");
+ el.innerHTML=v?`🔒 Cihaz kilidi <b>aktif</b> — uygulama açılışında PIN ister`:"🔓 Cihaz kilidi <b>kapalı</b>";
+}
+$("pinAktifBtn").onclick=async()=>{
+ const p=$("pinYeni").value.trim();
+ if(!/^\d{4}$/.test(p)){alert("4 haneli rakam gir");return}
+ if(store.personel&&store.personel.sicil===p){alert("PIN sicil numaran olamaz");return}
+ localStorage.setItem("mt8_pin",await sifreHashla("cihaz",p));
+ $("pinYeni").value="";pinCiz();alert("✅ Cihaz kilidi aktif. Bir sonraki açılışta PIN istenecek.");
+};
+$("pinKaldirBtn").onclick=async()=>{
+ if(!localStorage.getItem("mt8_pin")){alert("Cihaz kilidi zaten kapalı");return}
+ const p=prompt("Güvenlik için mevcut PIN'i gir (4 hane)");
+ if(p===null)return;
+ if(!await window._pinDogrula(p)){alert("PIN yanlış — kaldırılmadı");return}
+ localStorage.removeItem("mt8_pin");pinCiz();alert("🔓 Cihaz kilidi kaldırıldı");
+};
+window._pinDogrula=async function(p){
+ const v=localStorage.getItem("mt8_pin");
+ if(!v)return true;
+ return (await sifreHashla("cihaz",String(p).trim()))===v;
+};
+$("pinBtn").onclick=async()=>{
+ const p=$("pinGir").value.trim();
+ if(await window._pinDogrula(p)){
+  $("pinModal").classList.remove("acik");$("pinGir").value="";
+  sessionStorage.setItem("mt8_pin_ok","1");
+  return;
+ }
+ const e=$("pinHata");e.style.display="block";e.textContent="Yanlış PIN";
+ try{const C=new (window.AudioContext||window.webkitAudioContext)();const o=C.createOscillator(),g=C.createGain();o.type="square";o.frequency.value=220;o.connect(g);g.connect(C.destination);g.gain.setValueAtTime(.2,C.currentTime);g.gain.exponentialRampToValueAtTime(.001,C.currentTime+.25);o.start();o.stop(C.currentTime+.25)}catch(e){}
+ $("pinGir").value="";
+};
+$("pinGir").onkeydown=e=>{if(e.key==="Enter")$("pinBtn").click()};
+function pinKontrolAc(){
+ if(!localStorage.getItem("mt8_pin"))return;
+ if(sessionStorage.getItem("mt8_pin_ok")==="1")return;
+ $("pinHata").style.display="none";
+ $("pinModal").classList.add("acik");
+ setTimeout(()=>$("pinGir").focus(),80);
 }
 $("unKapatBtn").onclick=()=>$("unuttumModal").classList.remove("acik");
 $("unuttumBtn").onclick=()=>{
@@ -648,6 +769,28 @@ function gecmisCiz(){
 let _notT=null;
 $("notTxt").oninput=()=>{clearTimeout(_notT);_notT=setTimeout(()=>{store.notlar=store.notlar||{};const v=$("notTxt").value.trim();if(v)store.notlar[bugun()]=v;else delete store.notlar[bugun()];persist()},800)};
 let _lastLog="";
+async function gecikmeKontrol(sicil,tarih,gorevno){
+ try{
+  const sb=sbClient();if(!sb)return;
+  const tr=await sb.from("timetable_rows").select("saat").eq("gorevno",String(gorevno)).eq("yon",0).order("ttid").limit(1);
+  if(tr.error||!tr.data||!tr.data.length)return;
+  const plan=String(tr.data[0].saat||"").slice(0,5);
+  if(!/^\d{2}:\d{2}$/.test(plan))return;
+  const simdi=new Date();
+  const ger=String(simdi.getHours()).padStart(2,"0")+":"+String(simdi.getMinutes()).padStart(2,"0");
+  const f=z=>{const[a,b]=z.split(":").map(Number);return a*60+b};
+  let dk=f(ger)-f(plan);
+  if(dk<-720)dk+=1440;
+  if(dk<3)return;
+  await sb.from("gecikme_log").upsert({sicil:String(sicil),tarih,gorevno:String(gorevno),plan_saat:plan,gercek_saat:ger,gecikme_dk:dk});
+  if(dk>=5){
+   try{
+    if("Notification" in window&&Notification.permission==="granted")new Notification("⏰ Kalkış gecikmesi",{body:`Görev ${gorevno} için plan ${plan}, şu an ${ger} (+${dk} dk)`});
+   }catch(e){}
+   alert(`⏰ Gecikme bildirimi\n\nGörev ${gorevno} planı ${plan}, vardiya başlangıcın ${ger}.\nGecikme: ${dk} dk`);
+  }
+ }catch(e){}
+}
 async function logGorev(){
  try{
   const sb=sbClient();if(!sb||!store.personel||!store.personel.sicil||!store.gorevNo)return;
@@ -658,6 +801,7 @@ async function logGorev(){
   let r=await sb.from("gorev_log").upsert(row,{onConflict:"sicil,tarih"});
   if(r.error)r=await sb.from("gorev_log").insert(row);
   if(!r.error)_lastLog=k;
+  gecikmeKontrol(store.personel.sicil,today,store.gorevNo);
  }catch(e){}
 }
 function geceMi(){const h=new Date().getHours();return h>=22||h<6}
@@ -794,13 +938,47 @@ function dispecerGoster(){
  if(a){a.href=href||"#";a.style.display=n?"":"none"}
  if(b){b.innerHTML=n?`<a href="${href}" style="color:var(--accent)">📞 ${txt}</a>`:txt}
 }
-async function sbLoadRows(){const sb=sbClient();if(!sb)return;
- store.grupId=aktifTtid();
- $("bGorev").textContent=store.gorevNo;
- sbDurumYaz("⏳ Yükleniyor...");
- const {data,error}=await sb.from("timetable_rows").select("run,yon,saat,dinlenme_dk,tur_suresi_dk,artirim,iptal,kontrol").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).order("run").order("yon");
- if(error){sbDurumYaz("🔴 Hata: "+error.message);return}
- const turlar=rowsToTurlar(data||[]);
+const CACHE_KEY="mt8_tarife";
+function cacheYaz(ttid,gorevno,data){
+ try{localStorage.setItem(CACHE_KEY,JSON.stringify({z:Date.now(),ttid:String(ttid),g:gorevno,rows:data}))}catch(e){}
+}
+function cacheOku(ttid,gorevno){
+ try{
+  const c=JSON.parse(localStorage.getItem(CACHE_KEY)||"null");
+  if(!c||!c.rows)return null;
+  if(String(c.ttid)!==String(ttid)||String(c.g)!==String(gorevno))return null;
+  if(Date.now()-c.z>7*24*3600*1000)return null;
+  return c;
+ }catch(e){return null}
+}
+async function sbLoadRows(){const sb=sbClient();
+  store.grupId=aktifTtid();
+  $("bGorev").textContent=store.gorevNo;
+  if(!sb){
+   const c=cacheOku(store.grupId,store.gorevNo);
+   if(c){
+    const t2=rowsToTurlar(c.rows);
+    if(t2.length){store.veri=t2;warned.clear();warnedAnons.clear();persist();render();gecmisEkle();
+     sbDurumYaz(`🟡 ÇEVRİMDIŞI (önbellekten) • ${t2.length} tur • ${new Date(c.z).toLocaleString("tr-TR")}`);
+     return;
+    }
+   }
+   sbDurumYaz("🔴 Bağlantı yok ve önbellek bulunamadı");
+   return;
+  }
+  sbDurumYaz("⏳ Yükleniyor...");
+  const {data,error}=await sb.from("timetable_rows").select("run,yon,saat,dinlenme_dk,tur_suresi_dk,artirim,iptal,kontrol").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).order("run").order("yon");
+  if(error){
+   const c=cacheOku(store.grupId,store.gorevNo);
+   if(c){
+    const t2=rowsToTurlar(c.rows);
+    if(t2.length){store.veri=t2;warned.clear();warnedAnons.clear();persist();render();gecmisEkle();
+     sbDurumYaz(`🟡 ÖNBELLEK (sunucu hatası) • ${t2.length} tur`);return}
+   }
+   sbDurumYaz("🔴 Hata: "+error.message);return;
+  }
+  if(data&&data.length)cacheYaz(store.grupId,store.gorevNo,data);
+  const turlar=rowsToTurlar(data||[]);
  try{
   const h=await sb.from("arac_hareket").select("saat,tip").eq("ttid",store.grupId).eq("gorevno",String(store.gorevNo)).limit(200);
   store.hz={};(h.data||[]).forEach(x=>{store.hz[String(x.saat).slice(0,8)]=x.tip});
@@ -1194,23 +1372,25 @@ async function otoGirisSifreKontrol(){
  const sb=sbClient();
  if(!sb)return true;
  if(p.sifre_degisti===true)return true;
+ let r;
  try{
-  const r=await sb.from("personel_sifre").select("sifre_degisti").eq("sicil",String(p.sicil)).maybeSingle();
+  r=await sb.rpc("sifre_belirlendi_mi",{p_sicil:String(p.sicil)});
   if(r.error)return true;
-  if(r.data&&r.data.sifre_degisti){p.sifre_degisti=true;persist();return true}
-  store.personel=null;persist();
-  $("inSicil").value=String(p.sicil);
-  $("loginModal").classList.add("acik");
-  $("inAciklama").textContent="Bu cihazda otomatik giriş yapılmış — ancak şifren henüz belirlenmemiş. Önce şifreni oluştur.";
-  sifreModalAc(String(p.sicil),p.ad||"—");
-  return false;
+  if(r.data){p.sifre_degisti=true;persist();return true}
  }catch(e){return true}
+ store.personel=null;persist();
+ $("inSicil").value=String(p.sicil);
+ $("loginModal").classList.add("acik");
+ $("inAciklama").textContent="Bu cihazda otomatik giriş yapılmış — ancak şifren henüz belirlenmemiş. Önce şifreni oluştur.";
+ sifreModalAc(String(p.sicil),p.ad||"—");
+ return false;
 }
 if(store.personel)cizelgeGetir();
 baslamaKontrol();
 if(!store.personel)$("loginModal").classList.add("acik");
 otoGirisSifreKontrol();
 unuttumKontrol();setInterval(unuttumKontrol,60000);
+pinKontrolAc();pinCiz();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>

@@ -50,10 +50,27 @@ h2{font-size:15px;color:#93a3b8;letter-spacing:2px;margin:16px 22px 4px}
 .kayan{overflow:hidden;white-space:nowrap;border-top:2px solid #1e293b;background:#0b1220;padding:10px 0;position:sticky;bottom:0}
 .kayan span{display:inline-block;padding-left:100%;animation:kay 30s linear infinite;font-size:15px;color:#fbbf24;font-weight:700}
 @keyframes kay{to{transform:translateX(-100%)}}
+@media print{
+ @page{size:A4 landscape;margin:10mm}
+ body{background:#fff!important;color:#111!important}
+ header{border-bottom:2px solid #333!important;padding:6px 0!important}
+ header b{color:#111!important}
+ .kayan,.sosbar,#fsBtn,#pdfBtn,#gunSec,#sesBtn{display:none!important}
+ #hero{background:#f1f5f9!important;border:1px solid #94a3b8!important;break-inside:avoid}
+ .h-buyuk{color:#111!important}
+ h2{color:#334155!important;border-bottom:1px solid #cbd5e1!important;padding-bottom:3px}
+ .kart{background:#fff!important;border:1px solid #cbd5e1!important;break-inside:avoid;color:#111!important}
+ .kart h3,.kart .tur,.kart .tur.siradaki{color:#111!important}
+ .kart .ekip,.gunbilgi,.h-lab{color:#555!important}
+ .bar{background:#e2e8f0!important}
+ .seg.done{background:#86efac!important}.seg.now{background:#22c55e!important}.seg.next{background:#fcd34d!important}.seg.sonra{background:#cbd5e1!important}
+ .gunbar{background:#f8fafc!important;border-color:#cbd5e1!important}
+ .seritsel span{background:#f1f5f9!important;color:#111!important;border:1px solid #cbd5e1!important}
+}
 </style>
 </head>
 <body>
-<header><b>🚂 M8 Kumanda</b><span class="cip" id="tarihCip">-</span><select id="gunSec" style="width:auto;font-size:14px;font-weight:800;padding:6px 10px;border-radius:99px"><option value="0">📅 Otomatik</option><option value="1">Hafta İçi</option><option value="2">Cumartesi</option><option value="3">Pazar</option></select><span class="cip yesil" id="cSeferde">0 seferde</span><span class="cip sari" id="cMola">0 mola</span><span class="cip gri" id="cBitti">0 bitti</span><span class="cip mavi" id="cEkip">0 ekip</span><span class="cip kirmizi" id="msgCip" style="display:none">0 okunmamış</span><span class="cip" id="sesBtn" title="SOS sesi">🔇</span><span class="cip" id="fsBtn" title="Tam ekran">⛶</span><span class="saat" id="saat">--:--:--</span></header>
+<header><b>🚂 M8 Kumanda</b><span class="cip" id="tarihCip">-</span><select id="gunSec" style="width:auto;font-size:14px;font-weight:800;padding:6px 10px;border-radius:99px"><option value="0">📅 Otomatik</option><option value="1">Hafta İçi</option><option value="2">Cumartesi</option><option value="3">Pazar</option></select><span class="cip yesil" id="cSeferde">0 seferde</span><span class="cip sari" id="cMola">0 mola</span><span class="cip gri" id="cBitti">0 bitti</span><span class="cip mavi" id="cEkip">0 ekip</span><span class="cip kirmizi" id="msgCip" style="display:none">0 okunmamış</span><span class="cip" id="sesBtn" title="SOS sesi">🔇</span><span class="cip" id="fsBtn" title="Tam ekran">⛶</span><span class="cip" id="pdfBtn" title="PDF / Yazdır">🖨️</span><span class="saat" id="saat">--:--:--</span></header>
 <div id="sosBar"></div>
 <div id="hero"><div class="h-lab">SIRADAKİ KALKIŞ</div><div class="h-buyuk" id="heroTxt">—</div><div id="hatBarWrap"><div id="hatBar"><div id="hatBarIc" style="width:0%"></div></div><div id="hatTxt">-</div></div></div>
 <h2>⏭ YAKLAŞAN KALKIŞLAR</h2>
@@ -174,6 +191,18 @@ function ciz(){
  document.getElementById("hatTxt").textContent=`hat geneli %${hy} • ${bitT}/${topT} tur tamamlandı`;
 }
 setInterval(()=>{document.getElementById("saat").textContent=new Date().toLocaleTimeString("tr-TR");ciz()},1000);
+document.getElementById("pdfBtn").onclick=()=>{
+ const t=document.getElementById("tarihCip").textContent;
+ const ozet=document.getElementById("hatTxt").textContent;
+ const s=document.getElementById("serit").textContent.trim();
+ document.title=`M8 Kumanda — ${t}`;
+ const b=document.createElement("div");
+ b.style.cssText="position:fixed;top:0;left:0;right:0;background:#fff;color:#111;padding:6px 10px;font:600 12px system-ui;border-bottom:1px solid #999;z-index:9999";
+ b.textContent=`M8 Kumanda Raporu — ${t} — ${ozet} — Yaklaşan: ${s}`;
+ document.body.appendChild(b);
+ setTimeout(()=>{b.remove();document.title="M8 Kumanda"},900);
+ window.print();
+};
 yukle();setInterval(yukle,60000);
 </script>
 </body>
