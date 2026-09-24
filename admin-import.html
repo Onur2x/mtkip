@@ -3,104 +3,172 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin İçe Aktarma (Gizli)</title>
+<title>MakinistTakip • Yönetim Paneli</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#0b1220;color:#f1f5f9}
-.wrap{max-width:760px;margin:0 auto;padding:16px 14px 60px}
-h1{font-size:18px}h2{font-size:15px;color:#93a3b8;margin:18px 0 6px}
-.card{background:#16233f;border:1px solid #334155;border-radius:16px;padding:14px;margin:10px 0}
-label{font-size:13px;color:#93a3b8;display:block;margin:8px 0 4px}
-select,textarea,button,input{font-size:14px;padding:11px;border-radius:12px;border:1px solid #475569}
-input{width:100%;background:#0f172a;color:#e2e8f0;margin-bottom:6px}
-select{background:#fff;color:#111}
-textarea{width:100%;min-height:130px;font-family:Consolas,monospace;font-size:12px;background:#0f172a;color:#e2e8f0}
-button{background:#22c55e;color:#052e16;font-weight:800;border:none;cursor:pointer;margin:6px 6px 0 0}
-button.ghost{background:#334155;color:#fff}
-table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
-th,td{border:1px solid #334155;padding:5px 6px;text-align:center}
-th{background:#1e293b;color:#93a3b8}
-.warn{background:#451a03;border:1px solid #f59e0b;border-radius:12px;padding:10px;margin:8px 0;font-size:13px}
-.ok{background:#052e16;border:1px solid #22c55e;border-radius:12px;padding:10px;margin:8px 0;font-size:13px}
-.hint{font-size:12px;color:#93a3b8;line-height:1.7}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#0b1220;color:#e8eef7;-webkit-font-smoothing:antialiased}
+.shell{display:flex;min-height:100vh}
+.yan{width:236px;flex:0 0 236px;background:linear-gradient(180deg,#0f1a2e,#0b1220);border-right:1px solid #1e293b;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:18px 12px;overflow-y:auto}
+.yan .mark{display:flex;align-items:center;gap:10px;padding:6px 10px 18px;border-bottom:1px solid #1e293b;margin-bottom:14px}
+.yan .mark .lg{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#22c55e,#0c4a6e);display:grid;place-items:center;font-size:20px;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.yan .mark b{font-size:15px;display:block;line-height:1.2}
+.yan .mark i{font-size:11px;color:#7d8ea8;font-style:normal}
+.yan .bas{font-size:10px;letter-spacing:2px;color:#5f708a;padding:14px 10px 6px;font-weight:800}
+.yan button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:transparent;border:1px solid transparent;color:#b7c4d6;font-size:13.5px;font-weight:700;padding:10px 12px;border-radius:10px;margin:2px 0;cursor:pointer;position:relative;transition:.15s}
+.yan button:hover{background:#16233f;color:#fff}
+.yan button.on{background:linear-gradient(90deg,rgba(34,197,94,.22),rgba(34,197,94,.04));border-color:rgba(34,197,94,.4);color:#fff}
+.yan button .ri{font-size:16px;width:20px;text-align:center}
+.yan button .roz{display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:900;min-width:19px;height:19px;line-height:19px;border-radius:99px;text-align:center;padding:0 5px}
+.yan button .roz.var{display:block;animation:nab2 1.4s infinite}
+@keyframes nab2{50%{opacity:.45}}
+.yan .alt{margin-top:auto;padding-top:14px;border-top:1px solid #1e293b}
+.ana{flex:1;min-width:0;display:flex;flex-direction:column}
+.ustbar{position:sticky;top:0;z-index:40;background:rgba(11,18,32,.92);backdrop-filter:blur(12px);border-bottom:1px solid #1e293b;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ustbar .ttl{font-size:15px;font-weight:800}
+.ustbar .alt2{font-size:11.5px;color:#7d8ea8}
+.ustbar .sp{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icerik{padding:18px 20px 60px;max-width:1180px;width:100%}
+.sek{display:none}.sek.on{display:block}
+h1{font-size:19px;margin:0 0 4px}
+h2{font-size:14px;color:#9fb0c7;margin:0 0 10px;letter-spacing:.3px}
+.grid{display:grid;gap:12px}
+.card{background:linear-gradient(180deg,#16233f,#111c33);border:1px solid #1e293b;border-radius:14px;padding:14px;margin:0 0 12px;box-shadow:0 6px 20px rgba(0,0,0,.28);overflow-x:auto}
+.card h2::before{counter-increment:admsec;content:counter(admsec,decimal-leading-zero);display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#1e293b;color:#86efac;font-size:11px;margin-right:8px;font-weight:900}
 body{counter-reset:admsec}
-.anav{position:sticky;top:0;z-index:60;background:rgba(11,18,32,.94);backdrop-filter:blur(10px);padding:10px 4px;border-bottom:1px solid #334155;display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding-left:14px;padding-right:14px}
-.anav button{flex:0 0 auto;font-size:12px;padding:8px 12px;margin:0;border-radius:99px;white-space:nowrap}
-.anav button.on{background:#22c55e;color:#052e16;border:none}
-.anav button{position:relative}
-.anav button .roz{display:none;position:absolute;top:2px;right:6px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;border-radius:99px;line-height:18px;text-align:center;padding:0 4px}
-.anav button .roz.var{display:block}
-#uyariBar{display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:200;background:linear-gradient(90deg,#7f1d1d,#dc2626);color:#fff;font-weight:800;padding:12px 20px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:92vw;text-align:center}
-@media(min-width:960px){
- .wrap{max-width:960px}
- .anav{top:0}
-}
-.kpi{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(160deg,#1e293b,#16233f);border:1px solid #334155;border-radius:16px;padding:12px 18px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
-.kpi .ic{font-size:26px}
-.kpi .sayi{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;display:block;line-height:1}
-.kpi .etk{font-size:11px;color:#93a3b8}
-#topSaat{font-variant-numeric:tabular-nums;font-weight:800}
-#kulAra{margin:8px 0 0}
-.kpi{background:linear-gradient(160deg,#16233f,#111c33);border:1px solid #334155;border-left:5px solid #22c55e;border-radius:14px;padding:12px 16px;min-width:150px;flex:1 1 150px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
-.kpi .ic{font-size:20px}
-.kpi .sayi{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums;display:block;line-height:1.1}
-.kpi .etk{font-size:11px;color:#93a3b8}
-.kpi.kirmizi{border-left-color:#ef4444}.kpi.sari{border-left-color:#f59e0b}.kpi.mavi{border-left-color:#38bdf8}.kpi.mor{border-left-color:#a78bfa}
-.dilrow{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:8px 0}
-.dilrow>div{flex:1;min-width:130px}
-.bigraph{background:#111c33;border:1px solid #334155;border-radius:14px;padding:12px;margin-top:10px}
-.bigraph h4{margin:0 0 8px;font-size:12px;color:#93a3b8;letter-spacing:1px}
-.bar14{display:flex;align-items:flex-end;gap:5px;height:90px}
-.bar14>div{flex:1;border-radius:5px 5px 0 0;min-height:6px;background:linear-gradient(180deg,#22c55e,#166534)}
-.donutwrap{display:flex;align-items:center;gap:14px}
-.donutlej{font-size:12px;color:#93a3b8;line-height:1.9}
-.card h2::before{counter-increment:admsec;content:counter(admsec,decimal-leading-zero);display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#22c55e;color:#052e16;font-size:13px;margin-right:8px}
-.card{box-shadow:0 8px 24px rgba(0,0,0,.35)}
-table{font-variant-numeric:tabular-nums}
-tbody tr:nth-child(even){background:rgba(255,255,255,.03)}
-input:focus,textarea:focus,select:focus{outline:2px solid #22c55e;border-color:#22c55e}
-#topBtn{display:none;position:fixed;right:14px;bottom:14px;z-index:70;width:48px;height:48px;border-radius:99px;font-size:20px;padding:0}
-#topBtn.goster{display:block}
-#trOto.on,#tr1.on,#tr2.on,#tr3.on{background:#22c55e;color:#052e16;border:none}
-.ahead{background:linear-gradient(135deg,#0c4a6e,#155e75);border:1px solid #334155;border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;margin:14px 0 4px;box-shadow:0 10px 28px rgba(0,0,0,.4)}
-.ahead .logo{width:48px;height:48px;font-size:28px;background:rgba(255,255,255,.12);border-radius:14px;display:grid;place-items:center}
-.ahead b{font-size:17px;display:block}
-.ahead span{font-size:12px;color:#bae6fd}
-.ahead button{margin-left:auto;flex:0 0 auto}
-button[onclick*="il("]{background:transparent;border:1px solid #7f1d1d;color:#fca5a5;box-shadow:none}
-button[onclick*="il("]:hover{background:#7f1d1d;color:#fff}
-.card{overflow-x:auto}
-table{min-width:480px}
+label{font-size:12px;color:#8fa1b8;display:block;margin:9px 0 4px;font-weight:700}
+select,textarea,button,input{font-size:14px;padding:10px;border-radius:10px;border:1px solid #334155;font-family:inherit}
+input,select,textarea{width:100%;background:#0d1626;color:#e8eef7}
+textarea{min-height:120px;font-family:Consolas,monospace;font-size:12px;line-height:1.5}
+button{background:#22c55e;color:#052e16;font-weight:800;border:none;cursor:pointer;padding:10px 14px}
+button.ghost{background:#1e293b;color:#e8eef7;border:1px solid #334155}
+button:hover{filter:brightness(1.08)}
+.rozdel{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid #1e293b;padding:8px 7px;text-align:center}
+th{background:#0d1626;color:#8fa1b8;font-size:11px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0}
 tbody tr:hover{background:rgba(34,197,94,.07)}
-.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:800}
+tbody tr:nth-child(even){background:rgba(255,255,255,.02)}
+.tblw{overflow-x:auto;border:1px solid #1e293b;border-radius:12px}
+.hint{font-size:12px;color:#8fa1b8;line-height:1.7}
+.warn{background:#3b1d02;border:1px solid #f59e0b;border-radius:10px;padding:9px;margin:6px 0;font-size:12.5px;color:#fcd34d}
+.ok{background:#052e16;border:1px solid #22c55e;border-radius:10px;padding:9px;margin:6px 0;font-size:12.5px;color:#86efac}
+.kpi{background:linear-gradient(180deg,#16233f,#111c33);border:1px solid #1e293b;border-left:4px solid #22c55e;border-radius:13px;padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.kpi .ic{font-size:18px}
+.kpi .sayi{font-size:27px;font-weight:900;font-variant-numeric:tabular-nums;display:block;line-height:1.1}
+.kpi .etk{font-size:11px;color:#8fa1b8}
+.kpi.kirmizi{border-left-color:#ef4444}.kpi.sari{border-left-color:#f59e0b}.kpi.mavi{border-left-color:#38bdf8}.kpi.mor{border-left-color:#a78bfa}
+.kpi.mint{border-left-color:#2dd4bf}.kpi.pembe{border-left-color:#f472b6}.kpi.turuncu{border-left-color:#fb923c}
+.kpirow{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin:12px 0}
+.kpi{position:relative;overflow:hidden;cursor:default}
+.kpi .lb{display:flex;align-items:center;gap:7px;font-size:11px;color:#8fa1b8;font-weight:700;letter-spacing:.3px}
+.kpi .tr{font-size:10.5px;margin-top:5px;color:#6b7d95;display:flex;align-items:center;gap:4px}
+.kpi .tr.yuk{color:#4ade80}.kpi .tr.dus{color:#f87171}
+.kpi .bar{height:4px;border-radius:99px;background:#1e293b;margin-top:8px;overflow:hidden}
+.kpi .bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#22c55e,#4ade80)}
+.chartrow{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin:12px 0}
+.chartrow>div{min-width:0}
+@media(max-width:820px){.chartrow{grid-template-columns:1fr}}
+.bigraph{background:linear-gradient(180deg,#16233f,#111c33);border:1px solid #1e293b;border-radius:13px;padding:13px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.bigraph h3{margin:0 0 3px;font-size:12.5px;color:#e8eef7;letter-spacing:0;font-weight:800}
+.bigraph .sub{font-size:11px;color:#7d8ea8;margin:0 0 10px}
+.bar14{display:flex;align-items:flex-end;gap:4px;height:130px;padding-top:6px}
+.bar14>div{flex:1;min-width:4px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#34d399,#15803d);position:relative;transition:.25s}
+.bar14>div:hover{filter:brightness(1.3)}
+.bar14>div.bos{background:#1e293b}
+.axis{display:flex;gap:4px;margin-top:6px}
+.axis>span{flex:1;min-width:4px;text-align:center;font-size:8.5px;color:#64748b;overflow:hidden;white-space:nowrap}
+.uykrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0}
+.uyk{background:linear-gradient(180deg,#16233f,#111c33);border:1px solid #1e293b;border-radius:12px;padding:12px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:.15s}
+.uyk:hover{border-color:#334155;transform:translateY(-1px)}
+.uyk .em{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:19px;flex:0 0 auto}
+.uyk b{font-size:22px;font-weight:900;display:block;line-height:1;font-variant-numeric:tabular-nums}
+.uyk span{font-size:11px;color:#8fa1b8}
+.rank{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #1e293b;font-size:12.5px}
+.rank:last-child{border-bottom:none}
+.rank .no{width:22px;height:22px;border-radius:7px;background:#1e293b;color:#8fa1b8;display:grid;place-items:center;font-size:10.5px;font-weight:900;flex:0 0 auto}
+.rank.no1 .no{background:#22c55e;color:#052e16}
+.rank.no2 .no{background:#38bdf8;color:#082f49}
+.rank.no3 .no{background:#f59e0b;color:#451a03}
+.rank .ad{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .rb{width:110px;height:7px;border-radius:99px;background:#1e293b;overflow:hidden;flex:0 0 auto}
+.rank .rb>i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#86efac)}
+.rank .sv{width:34px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;color:#86efac;flex:0 0 auto}
+.tl{position:relative;padding-left:20px;max-height:330px;overflow-y:auto}
+.tl::before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:#1e293b}
+.tl .ev{position:relative;padding:6px 0 6px 4px;font-size:12.5px;border-bottom:1px solid rgba(30,41,59,.5)}
+.tl .ev::before{content:"";position:absolute;left:-19px;top:12px;width:9px;height:9px;border-radius:99px;background:#334155;border:2px solid #0f172a}
+.tl .ev.aci::before{background:#22c55e}
+.tl .ev.uyari::before{background:#ef4444}
+.tl .ev.sari::before{background:#f59e0b}
+.tl .ev .tm{font-size:10.5px;color:#64748b}
+.prog{margin:7px 0}
+.prog .ph{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px;color:#9fb0c7}
+.prog .pb{height:7px;border-radius:99px;background:#1e293b;overflow:hidden}
+.prog .pb>i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:99px}
+.hizli{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.hizli button{padding:7px 12px;font-size:12px;border-radius:99px;background:#1e293b;color:#9fb0c7;border:1px solid #334155;font-weight:700}
+.hizli button.on{background:#22c55e;color:#052e16;border-color:#22c55e}
+.bigraph{background:linear-gradient(180deg,#16233f,#111c33);border:1px solid #1e293b;border-radius:13px;padding:13px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.bigraph h3{margin:0 0 10px;font-size:11.5px;color:#9fb0c7;letter-spacing:1.2px;font-weight:800}
+.bar14{display:flex;align-items:flex-end;gap:5px;height:104px}
+.bar14>div{flex:1;border-radius:5px 5px 0 0;min-height:6px;background:linear-gradient(180deg,#34d399,#15803d);transition:.3s}
+.bar14>div:hover{filter:brightness(1.25)}
+.donutwrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.donutlej{font-size:12px;color:#8fa1b8;line-height:2}
+.dilrow{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:8px 0 4px}
+.dilrow>div{flex:1;min-width:140px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:800}
 .pill.ok{background:rgba(34,197,94,.18);color:#4ade80}
 .pill.no{background:rgba(239,68,68,.18);color:#f87171}
 .pill.warn{background:rgba(245,158,11,.18);color:#fbbf24}
-#kilit .card{background:linear-gradient(160deg,#16233f,#0c4a6e)}
-#kilit .logo{width:64px;height:64px;font-size:38px;background:rgba(255,255,255,.1);border-radius:18px;display:grid;place-items:center;margin:0 auto 10px}
-#kilit{position:fixed;inset:0;background:#0b1220;z-index:99;display:grid;place-items:center;padding:20px}
-#kilit .card{width:100%;max-width:340px;text-align:center}
-body.kilitli .wrap{display:none}
+#uyariBar{display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:300;background:linear-gradient(90deg,#7f1d1d,#dc2626);color:#fff;font-weight:800;padding:12px 22px;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.55);max-width:92vw;text-align:center;animation:sl 4s}
+@keyframes sl{90%{transform:translateX(-50%) translateY(0);opacity:1}100%{transform:translateX(-50%) translateY(-8px);opacity:0}}
+#kilit{position:fixed;inset:0;background:radial-gradient(800px 500px at 50% -10%,#164e63,#0b1220);z-index:400;display:grid;place-items:center;padding:20px}
+#kilit .lk{width:100%;max-width:350px;text-align:center;background:linear-gradient(180deg,#16233f,#111c33);border:1px solid #1e293b;border-radius:18px;padding:26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+#kilit .lg{width:62px;height:62px;font-size:32px;background:rgba(34,197,94,.14);border-radius:18px;display:grid;place-items:center;margin:0 auto 12px}
+body.kilitli .shell{display:none}
+#trOto.on,#tr1.on,#tr2.on,#tr3.on{background:#22c55e;color:#052e16;border:none}
+#trOto,#tr1,#tr2,#tr3{flex:1}
+.mobilmenu{display:none}
+@media(max-width:860px){
+ .yan{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);transition:.22s}
+ .yan.acik{transform:translateX(0);box-shadow:0 0 50px rgba(0,0,0,.6)}
+ .mobilmenu{display:inline-flex}
+ .icerik{padding:14px 12px 60px}
+ .ustbar{padding:10px 12px}
+}
+@media(min-width:861px){.ustbar .mobilmenu{display:none}}
 </style>
 </head>
 <body class="kilitli">
 <div id="kilit">
-<div class="card">
-<div class="logo">🔒</div>
-<h2>Admin Girişi</h2>
-<p class="hint">Bu sayfa kilitli — sadece yetkili girişi açar.</p>
+<div class="lk">
+<div class="lg">🔒</div>
+<h1 style="margin:0 0 2px">Yönetim Paneli</h1>
+<p class="hint" style="margin:0 0 14px">Bu sayfa kilitli — sadece yetkili girişi açar.</p>
 <label style="text-align:left">E-posta</label><input id="kMail" autocomplete="off" placeholder="ornek@mail.com">
 <label style="text-align:left">Şifre</label><input id="kPass" type="password" placeholder="••••••">
-<div><button id="kBtn">🔑 Gir</button></div>
-<div class="hint" id="kDurum"></div>
-<p class="hint">Supabase &gt; Authentication &gt; Users'tan kullanıcı açmış olmalısın.</p>
+<button id="kBtn" style="width:100%;margin-top:6px">🔑 Giriş Yap</button>
+<div class="hint" id="kDurum" style="margin-top:8px"></div>
+<p class="hint" style="margin-top:12px">Supabase &gt; Authentication &gt; Users'ta hesabın olmalı.</p>
 </div>
 </div>
-<div class="wrap">
-<h1 style="display:none">🔒 Admin</h1>
-<div class="ahead"><div class="logo">🖥️</div><div><b>MakinistTakip • Admin Paneli</b><span id="admKim">—</span></div><span id="topSaat" style="margin-left:auto;font-size:15px"></span><button id="bildirimAcBtn" class="ghost" style="font-size:12px;padding:8px 12px;flex:0 0 auto">🔔</button><button id="kCikisBtn" class="ghost" style="font-size:12px;padding:8px 12px">🚪 Çıkış</button></div>
+<div class="shell">
+<aside class="yan" id="yan">
+<div class="mark"><div class="lg">🚂</div><div><b>MakinistTakip</b><i>Yönetim Paneli</i></div></div>
+<nav id="menu"></nav>
+<div class="alt"><button id="kCikisBtn" class="ghost" style="width:100%">🚪 Çıkış</button></div>
+</aside>
+<div class="ana">
+<div class="ustbar">
+<button class="ghost mobilmenu" id="menuBtn">☰</button>
+<div><div class="ttl" id="sekBaslik">🕵️ Gösterge Paneli</div><div class="alt2" id="admKim">—</div></div>
+<div class="sp"><span class="hint" id="topSaat"></span><button class="ghost" id="bildirimAcBtn" style="font-size:12px;padding:8px 10px">🔔</button> <button id="spYenileBtn2" style="font-size:12px;padding:8px 12px">↻</button></div>
+</div>
 <div id="uyariBar"></div>
-<nav class="anav" id="anav"></nav>
-<p class="hint">Excel'den kopyala → aşağıya yapıştır → <b>SQL Üret</b> → çıkan SQL'i Supabase &gt; SQL Editor'de çalıştır.<br>
+<div class="icerik" id="icerik">
+<!--SEK:panel-->
+<p class="hint" id="ipucu">Excel'den kopyala → aşağıya yapıştır → <b>SQL Üret</b> → çıkan SQL'i Supabase &gt; SQL Editor'de çalıştır.<br>
 Eşleşme: her PAR'a kendinden sonraki ilk BOS verilir (en fazla 3 saat içinde). Eşleşmeyen PAR/BOS uyarı olarak listelenir. Gece yarısı (00:xx) saatler en sona alınır. Tur süresi 51 dk sabit.<br>
 Dinlenme formülü: <b>sonraki PAR − (BOS + (BOS − PAR))</b> → yukarı yuvarlanır. Örn: PAR 07:29, BOS 07:56, sonraki 08:45 → 08:45 − (07:56+27) = 22 dk. Son turun dinlenmesi 0 yazılır.<br>
 <b>Dikkat:</b> SQL önce o günün tüm satırlarını silip yeniler — günü <b>tam</b> yapıştır, parça yapıştırma.</p>
@@ -121,7 +189,6 @@ Dinlenme formülü: <b>sonraki PAR − (BOS + (BOS − PAR))</b> → yukarı yuv
 <h2>📄 Üretilen SQL</h2>
 <textarea id="sqlTxt" style="min-height:200px" readonly></textarea>
 <div><button id="kopyalaBtn" class="ghost">📋 Kopyala</button><button id="indirBtn" class="ghost">💾 .sql İndir</button></div>
-</div>
 </div>
 
 <script>
@@ -233,27 +300,37 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <label>Sicil</label><input id="pSicil" inputmode="numeric" autocomplete="off" placeholder="örn 5771">
 <label>Ad Soyad</label><input id="pAd" autocomplete="off" placeholder="Ad SOYAD">
 <div><button id="pEkleBtn">➕ Ekle</button><button id="pYenileBtn" class="ghost">↻ Listele</button></div>
-<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Ad</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="pListe"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Sicil</th><th>Ad</th><th>Durum</th><th>Şifre</th><th>İşlem</th></tr></thead><tbody id="pListe"></tbody></table></div>
 </div>
+</div>
+<div class="card">
+<h2>🔐 Şifre Yönetimi</h2>
+<p class="hint">Personel ilk girişte kendi şifresini belirler. Unutan olursa sicilini seçip şifreyi sıfırla — sonraki girişte tekrar kendi şifresini oluşturur.</p>
+<div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+<div style="flex:2"><label>Sicil</label><select id="sfSicil"><option value="">—</option></select></div>
+<div><button id="sfSifirlaBtn" class="ghost">♻️ Şifreyi Sıfırla</button></div>
+</div>
+<div class="hint" id="sfDurum" style="margin-top:8px">-</div>
+<div class="tblw" style="margin-top:10px"><table><thead><tr><th>Sicil</th><th>Ad</th><th>Şifre Durumu</th><th>Son Değişim</th><th>İşlem</th></tr></thead><tbody id="sfListe"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📩 Personel Mesajı <span style="font-size:11px">(admin girişi gerekir)</span></h2>
 <label>Sicil</label><input id="mSicil" inputmode="numeric" autocomplete="off" placeholder="örn 5771">
 <label>Mesaj</label><textarea id="mTxt" style="min-height:70px" placeholder="Mesajı yaz..."></textarea>
 <div><button id="mGonderBtn">📤 Gönder</button><button id="mYenileBtn" class="ghost">↻ Mesajlar</button></div>
-<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Mesaj</th><th>Gönderilme</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="mListe"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Sicil</th><th>Mesaj</th><th>Gönderilme</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="mListe"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📥 Gelen Kutusu (personelden)</h2>
 <div><button id="gkYenileBtn" class="ghost">↻ Yenile</button></div>
-<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Mesaj</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="gkListe"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Sicil</th><th>Mesaj</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="gkListe"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📢 Toplu Duyuru <span style="font-size:11px">(admin girişi gerekir)</span></h2>
 <label>Hedef</label><select id="dHedef" style="width:100%"><option value="all">Herkes</option><option value="1">Hafta İçi (1-99)</option><option value="2">Cumartesi (101-199)</option><option value="3">Pazar (201-299)</option></select>
 <label>Mesaj</label><textarea id="dTxt" style="min-height:70px" placeholder="Duyuruyu yaz..."></textarea>
 <div><button id="dGonderBtn">📤 Yayınla</button><button id="dYenileBtn" class="ghost">↻ Duyurular</button></div>
-<table style="margin-top:10px"><thead><tr><th>Mesaj</th><th>Hedef</th><th>Zaman</th><th>Okuyan</th><th>İşlem</th></tr></thead><tbody id="dListe"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Mesaj</th><th>Hedef</th><th>Zaman</th><th>Okuyan</th><th>İşlem</th></tr></thead><tbody id="dListe"></tbody></table></div>
 </div>
 <div class="card">
 <h2>🚏 Araç Giriş / Çıkış (manuel)</h2>
@@ -262,28 +339,35 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <label>Saat</label><input type="time" id="hSaat" step="1" value="06:00:00">
 <label>Tip</label><select id="hTip" style="width:100%"><option value="0">+ Giriş (yeşil)</option><option value="1">− Çıkış (kırmızı)</option></select>
 <div><button id="hEkleBtn">➕ Ekle</button><button id="hYenileBtn" class="ghost">↻ Listele</button></div>
-<table style="margin-top:10px"><thead><tr><th>Görev</th><th>Saat</th><th>Tip</th><th>İşlem</th></tr></thead><tbody id="hListe"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Görev</th><th>Saat</th><th>Tip</th><th>İşlem</th></tr></thead><tbody id="hListe"></tbody></table></div>
 </div>
 <div class="card">
-<h2>🕵️ Süper Panel — her şey burada</h2>
-<div><button id="spYenileBtn">↻ Yenile</button> <span class="hint" id="spDurum"></span></div>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+<div><h2 style="margin:0">🕵️ Süper Panel</h2><p class="hint" style="margin:2px 0 0">Tüm hat verileri tek ekranda</p></div>
+<div style="margin-left:auto;display:flex;gap:8px;align-items:center"><span class="hint" id="spDurum"></span><button id="spYenileBtn">↻ Yenile</button></div>
+</div>
+<div class="hizli" id="spHizli"><button data-gun="0" class="on">Bugün</button><button data-gun="6">7 Gün</button><button data-gun="13">14 Gün</button><button data-gun="29">30 Gün</button></div>
 <div class="dilrow"><div><label>Başlangıç</label><input type="date" id="spBas"></div><div><label>Bitiş</label><input type="date" id="spBit"></div></div>
-<div id="spOzet" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"></div>
-<div class="bigraph"><h4>📊 GÜNLÜK AKTİFLİK</h4><div id="spGrafik"></div></div>
-<div class="bigraph"><h4>🍩 KADRO DURUMU (aralıkta görev alanlar)</h4><div class="donutwrap"><svg id="donutSvg" width="120" height="120" viewBox="0 0 120 120"></svg><div class="donutlej" id="donutLej"></div></div></div>
-<label>Kişi seç (detay)</label><select id="spKisi" style="width:100%"><option value="">—</option></select>
+<div class="kpirow" id="spOzet"></div>
+<div class="uykrow" id="spUyar"></div>
+<div class="chartrow">
+<div class="bigraph"><h3>📊 Günlük Aktivite</h3><p class="sub" id="spGrafikSub">Görev yükleme adedi</p><div id="spGrafik"></div><div class="axis" id="spEksen"></div></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="bigraph"><h3>🍩 Kadro Durumu</h3><p class="sub">Aralıkta görev alanlar</p><div class="donutwrap"><svg id="donutSvg" width="112" height="112" viewBox="0 0 120 120"></svg><div class="donutlej" id="donutLej"></div></div></div>
+<div class="bigraph"><h3>🏆 En Aktif Kadro</h3><p class="sub">Görev sayısına göre</p><div id="spLider"></div></div>
+</div>
+</div>
+<label>Kişi seç (detay)</label><select id="spKisi"><option value="">—</option></select>
 <div id="spKisiDetay" style="margin-top:8px"></div>
-<h2 style="margin-top:14px">📡 Canlı Akış — son olaylar</h2>
-<p class="hint">Hattaki son hareketler: görev yükleme, mesaj, SOS, arıza, takas, test. En yeni üstte.</p>
-<div id="spZaman"></div>
-<h2 style="margin-top:14px">Okumayanlar (son duyuru + talimatlar)</h2>
-<div id="spOkuma"></div>
+<div class="bigraph" style="margin-top:12px"><h3>📡 Canlı Akış</h3><p class="sub">Son olaylar — en yeni üstte</p><div class="tl" id="spZaman"></div></div>
+<div class="bigraph" style="margin-top:12px"><h3>👁️ Okumayanlar</h3><p class="sub">Son duyuru + talimatlar</p><div id="spOkuma"></div></div>
 </div>
 <div class="card">
 <h2>🟢 Aktif Kullanıcılar</h2>
 <div style="display:flex;gap:8px;align-items:end"><div style="flex:1"><label>Tarih</label><input type="date" id="kulTarih"></div><div style="flex:2"><label>Ara</label><input id="kulAra" autocomplete="off" placeholder="sicil / ad / görev"></div><div><button id="kulBtn" class="ghost">↻ Getir</button></div></div>
 <div class="hint" id="kulDurum">-</div>
-<table style="margin-top:8px"><thead><tr><th>Sicil</th><th>Ad</th><th>Görev</th><th>Başladı</th><th>Okunmamış</th><th>Son hareket</th></tr></thead><tbody id="kulListe"></tbody></table>
+<div class="kpirow" id="kulOzet"></div>
+<div class="tblw"><table><thead><tr><th>Sicil</th><th>Ad</th><th>Görev</th><th>Başladı</th><th>Okunmamış</th><th>Son hareket</th></tr></thead><tbody id="kulListe"></tbody></table></div>
 </div>
 <div class="card">
 <h2>🚏 Toplu Hareket Yükle</h2>
@@ -303,7 +387,7 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div class="card">
 <h2>🔧 Arıza Bildirimleri</h2>
 <div><button id="arzYenileBtn" class="ghost">↻ Yenile</button></div>
-<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Arıza</th><th>Foto</th><th>Zaman</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="arzListe2"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Sicil</th><th>Arıza</th><th>Foto</th><th>Zaman</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="arzListe2"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📅 Günlük Tarife Kararı</h2>
@@ -324,14 +408,14 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div class="card">
 <h2>🆘 Acil Durumlar <span style="font-size:11px">(otomatik yenilenir)</span></h2>
 <div><button id="sosYenileBtn" class="ghost">↻ Yenile</button></div>
-<table style="margin-top:10px"><thead><tr><th>Sicil</th><th>Görev</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="sosListe"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Sicil</th><th>Görev</th><th>Zaman</th><th>İşlem</th></tr></thead><tbody id="sosListe"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📋 Talimatlar</h2>
 <label>Başlık</label><input id="tBaslik" autocomplete="off" placeholder="örn Hat çalışması">
 <label>İçerik</label><textarea id="tIcerik" style="min-height:70px"></textarea>
 <div><button id="tEkleBtn">➕ Ekle</button><button id="tYenileBtn" class="ghost">↻ Listele</button></div>
-<table style="margin-top:10px"><thead><tr><th>Başlık</th><th>Okuyan</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="tListe"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Başlık</th><th>Okuyan</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="tListe"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📝 Soru Bankası + Sonuçlar</h2>
@@ -347,13 +431,13 @@ $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement
 <div class="card">
 <h2>🔄 Takas Talepleri</h2>
 <div><button id="tkYenileBtn" class="ghost">↻ Listele</button></div>
-<table style="margin-top:10px"><thead><tr><th>İsteyen</th><th>İstek</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="tkListe2"></tbody></table>
+<div class="tblw"><table><thead><tr><th>İsteyen</th><th>İstek</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="tkListe2"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📁 Doküman Yükle</h2>
 <label>Dosya (PDF vb.)</label><input type="file" id="dokDosya">
 <div><button id="dokYukleBtn">⬆️ Yükle</button><button id="dokYenileBtn" class="ghost">↻ Listele</button></div>
-<table style="margin-top:10px"><thead><tr><th>Dosya</th><th>İşlem</th></tr></thead><tbody id="dokListe2"></tbody></table>
+<div class="tblw"><table><thead><tr><th>Dosya</th><th>İşlem</th></tr></thead><tbody id="dokListe2"></tbody></table></div>
 </div>
 <div class="card">
 <h2>📅 Aylık Döküm (Excel)</h2>
@@ -403,21 +487,6 @@ function uyariGoster(metin){
 function adminBildirim(baslik,metin){
  try{if("Notification" in window&&Notification.permission==="granted"){try{new Notification(baslik,{body:metin})}catch(e){}}}catch(e){}
 };
-(function(){
-  const gruplar=[["🕵️ Panel",[6,7,11,16]],["📥 Veri",[0,1,5,8,9,10]],["👥 Kadro",[2,14]],["💬 İletişim",[3,4,12]],["📚 İçerik",[13,15]]];
- const nav=$("anav");if(!nav)return;nav.innerHTML="";
- function goster(i){
-  const cards=document.querySelectorAll(".wrap>.card");
-  cards.forEach((c,j)=>c.style.display=gruplar[i][1].includes(j)?"":"none");
-  [...nav.children].forEach((b,k)=>b.classList.toggle("on",k===i));
-  window.scrollTo({top:0});
- }
- gruplar.forEach(([ad],i)=>{const b=document.createElement("button");b.className="ghost";b.innerHTML=`${ad}<span class="roz" id="roz${i}"></span>`;b.onclick=()=>goster(i);nav.appendChild(b)});
- goster(0);
- const top=$("topBtn");
- window.addEventListener("scroll",()=>{top.classList.toggle("goster",window.scrollY>600)},{passive:true});
- top.onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
-})();
 window._kilitAcik=kilitAcikMi;
 $("admLoginBtn").onclick=async()=>{
  const {error}=await sb.auth.signInWithPassword({email:$("admMail").value.trim(),password:$("admPass").value});
@@ -427,19 +496,51 @@ $("admLoginBtn").onclick=async()=>{
  liste();
 };
 async function liste(){
- const {data,error}=await sb.from("personel").select("sicil,ad,aktif").order("sicil");
- if(error){alert(error.message);return}
- $("pListe").innerHTML=(data||[]).map(p=>`<tr><td>${p.sicil}</td><td style="text-align:left">${p.ad}</td><td>${p.aktif?"✅":"⛔"}</td><td><button class="ghost" onclick="tgl('${p.sicil}',${!p.aktif})">${p.aktif?"Pasif":"Aktif"}</button> <button class="ghost" onclick="sil('${p.sicil}')">Sil</button></td></tr>`).join("");
+  const {data,error}=await sb.from("personel").select("sicil,ad,aktif").order("sicil");
+  if(error){alert(error.message);return}
+  const per=data||[];
+  let sf=new Map();
+  try{
+   const s=await sb.from("personel_sifre").select("sicil,sifre_degisti,guncellendi");
+   (s.data||[]).forEach(x=>sf.set(x.sicil,x));
+  }catch(e){}
+  $("pListe").innerHTML=per.map(p=>{
+   const k=sf.get(p.sicil),degis=k&&k.sifre_degisti;
+   return `<tr><td>${p.sicil}</td><td style="text-align:left">${p.ad}</td><td>${p.aktif?"✅":"⛔"}</td><td>${k===undefined?'<span class="pill warn">tablo yok</span>':degis?'<span class="pill ok">belirlendi</span>':'<span class="pill no">ilk giriş</span>'}</td><td><button class="ghost" onclick="tgl('${p.sicil}',${!p.aktif})">${p.aktif?"Pasif":"Aktif"}</button> <button class="ghost" onclick="sil('${p.sicil}')">Sil</button></td></tr>`;
+  }).join("")||'<tr><td colspan=5"><div class="hint" style="padding:14px">Kayıtlı personel yok</div></td></tr>';
+  const sel=$("sfSicil"),once=sel.value;
+  sel.innerHTML=`<option value="">—</option>`+per.map(p=>`<option value="${p.sicil}">${p.sicil} - ${p.ad}</option>`).join("");
+  if(once)sel.value=once;
+  const sat=per.map(p=>{
+   const k=sf.get(p.sicil);
+   const durum=k===undefined?'<span class="pill warn">tablo yok</span>':k.sifre_degisti?'<span class="pill ok">belirlendi</span>':'<span class="pill no">ilk giriş bekliyor</span>';
+   const z=k&&k.sifre_degisti&&k.guncellendi?new Date(k.guncellendi).toLocaleString("tr-TR"):"—";
+   return `<tr><td>${p.sicil}</td><td style="text-align:left">${p.ad}</td><td>${durum}</td><td>${z}</td><td>${k&&k.sifre_degisti?`<button class="ghost" onclick="sfSifirla('${p.sicil}')">♻️ Sıfırla</button>`:'<span class="hint">—</span>'}</td></tr>`;
+  }).join("");
+  $("sfListe").innerHTML=sat||'<tr><td colspan=5><div class="hint" style="padding:14px">Kayıtlı personel yok</div></td></tr>';
+  $("sfDurum").textContent=`${per.length} personel • ${[...sf.values()].filter(x=>x.sifre_degisti).length} şifre belirledi • ${per.filter(p=>{const k=sf.get(p.sicil);return !k||!k.sifre_degisti}).length} bekliyor`;
 }
+window.sfSifirla=async sicil=>{
+ if(!await _oturum()){alert("Önce admin girişi yap");return}
+ if(!confirm(`${sicil} sicilinin şifresi sıfırlansın mı?\n\nSonraki girişte şifre = sicil olacak ve yeni şifre belirlemesi istenecek.`))return;
+ const{error}=await sb.from("personel_sifre").update({sifre_hash:"",sifre_degisti:false,guncellendi:new Date().toISOString()}).eq("sicil",sicil);
+ if(error)alert("🔴 "+error.message);else{alert("✅ Şifre sıfırlandı");liste()}
+};
+$("sfSifirlaBtn").onclick=async()=>{
+ if(!await _oturum()){alert("Önce admin girişi yap");return}
+ const s=$("sfSicil").value;if(!s){alert("Sicil seç");return}
+ await window.sfSifirla(s);
+};
 $("pYenileBtn").onclick=liste;
 $("pEkleBtn").onclick=async()=>{
  const sicil=$("pSicil").value.trim(),ad=$("pAd").value.trim();
  if(!sicil||!ad){alert("Sicil ve ad gerekli");return}
  const var1=await sb.from("personel").select("sicil").eq("sicil",sicil).maybeSingle();
  if(var1.data){alert("Bu sicil zaten kayıtlı — değiştirmek için önce Sil");return}
- const{error}=await sb.from("personel").insert({sicil,ad,aktif:true});
- if(error){alert("🔴 "+error.message);return}
- $("pSicil").value="";$("pAd").value="";liste();
+  const{error}=await sb.from("personel").insert({sicil,ad,aktif:true});
+  if(error){alert("🔴 "+error.message);return}
+  try{await sb.from("personel_sifre").upsert({sicil,sifre_hash:"",sifre_degisti:false})}catch(e){}
+  $("pSicil").value="";$("pAd").value="";liste();
 };
 window.tgl=async(sicil,aktif)=>{
  const {error}=await sb.from("personel").update({aktif}).eq("sicil",sicil);
@@ -539,7 +640,7 @@ window.sosSil=async id=>{
  if(error)alert(error.message);else sosListe();
 };
 setInterval(()=>sosListe(true),30000);
-function rozetKoy(i,n){const r=$("roz"+i);if(!r)return;if(n>0){r.textContent=n>99?"99+":n;r.classList.add("var")}else{r.textContent="";r.classList.remove("var")}}
+function rozetKoy(bolum,n){const r=$("roz_"+bolum);if(!r)return;if(n>0){r.textContent=n>99?"99+":n;r.classList.add("var")}else{r.textContent="";r.classList.remove("var")}}
 let _wd={ilk:true,once:{msg:0,sos:[],arz:[],tak:[]}};
 async function bekci(){
  if(!await _oturum())return;
@@ -554,7 +655,7 @@ async function bekci(){
   const yArz=yen.arz.filter(id=>!once.arz.includes(id));
   const yTak=yen.tak.filter(id=>!once.tak.includes(id));
   _wd.once=yen;
-  rozetKoy(0,yen.sos.length);rozetKoy(2,yen.tak.length);rozetKoy(3,yen.msg);rozetKoy(4,yen.arz.length);
+  rozetKoy("panel",yen.sos.length);rozetKoy("iletisim",yen.tak.length+yen.msg+yen.arz.length);
   if(_wd.ilk){_wd.ilk=false;return}
   const msj=[];
   if(ySos.length)msj.push(`🆘 ${ySos.length} yeni SOS`);
@@ -570,9 +671,27 @@ async function bekci(){
 setInterval(()=>{if(!document.body.classList.contains("kilitli"))bekci()},30000);
 const chip=(t,cls)=>{const m=t.match(/^(\S+)\s+(\d+)\s+(.*)$/);return m?`<span class="kpi ${cls||""}"><span class="ic">${m[1]}</span><span><span class="sayi">${m[2]}</span><span class="etk">${m[3]}</span></span></span>`:`<span class="kpi ${cls||""}"><span class="ic">•</span><span><span class="sayi">-</span><span class="etk">${t}</span></span></span>`};
 $("spYenileBtn").onclick=()=>spYenile(false);
+$("spYenileBtn2").onclick=()=>spYenile(false);
+$("spHizli").onclick=e=>{
+ const b=e.target.closest("button[data-gun]");if(!b)return;
+ [...$("spHizli").children].forEach(x=>x.classList.remove("on"));b.classList.add("on");
+ const d=new Date(),p2=n=>String(n).padStart(2,"0");
+ d.setDate(d.getDate()-(+b.dataset.gun));
+ $("spBas").value=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+ const n2=new Date();$("spBit").value=`${n2.getFullYear()}-${p2(n2.getMonth()+1)}-${p2(n2.getDate())}`;
+ spYenile(true);
+};
+$("spBas").onchange=$("spBit").onchange=()=>{[$("spHizli").children].forEach(x=>x.forEach(y=>y.classList.remove("on")));spYenile(true)};
 $("kulBtn").onclick=()=>kullaniciListe();
 setInterval(()=>{if(!document.body.classList.contains("kilitli"))kullaniciListe()},120000);
 setInterval(()=>{if(!document.body.classList.contains("kilitli"))spYenile(true)},60000);
+function kpiTile(ic,lb,v,tr,cls,yuzde){
+ return `<div class="kpi ${cls||""}"><span class="lb"><span>${ic}</span>${lb}</span><b class="sayi">${v}</b><span class="tr">${tr}</span><span class="bar"><i style="width:${Math.max(3,Math.min(100,Math.round(yuzde||0)))}%"></i></span></div>`;
+}
+function uyariKutu(ic,lb,n,cls){
+ const renk={kirmizi:["rgba(239,68,68,.16)","#f87171"],sari:["rgba(245,158,11,.16)","#fbbf24"],mavi:["rgba(56,189,248,.16)","#38bdf8"],turuncu:["rgba(251,146,60,.16)","#fb923c"]}[cls]||["rgba(34,197,94,.16)","#4ade80"];
+ return `<div class="uyk"><span class="em" style="background:${renk[0]};color:${renk[1]}">${ic}</span><div><b style="color:${renk[1]}">${n}</b><span>${lb}</span></div></div>`;
+}
 async function spYenile(sessiz){
  if(!await _oturum()){if(!sessiz)alert("Önce giriş yap");return}
  $("spDurum").textContent="⏳ ...";
@@ -593,14 +712,32 @@ async function spYenile(sessiz){
   const tk=await sb.from("takas").select("id").eq("durum","bekliyor").limit(100);
   const s=await sb.from("sos").select("id").gte("created_at",T+"T00:00:00").limit(50);
   const aralikKisi=new Set(gl.map(r=>r.sicil)).size;
-  $("spOzet").innerHTML=chip(`👥 ${aktif.length} personel`)+chip(`🟢 ${aralikKisi} aralıkta aktif`,"")+chip(`✅ ${basl.size} bugün başladı`,"")+chip(`✖️ ${okunmamis} okunmamış`,"kirmizi")+chip(`⏳ ${tk.data.length} takas`,"sari")+chip(`🆘 ${s.data.length} SOS`,"kirmizi");
+  const toplamGorev=gl.length;
+  const ort=(await (async()=>{try{const q=await sb.from("sinav_sonuc").select("dogru").order("created_at",{ascending:false}).limit(60);const a=q.data||[];return a.length?(a.reduce((s,r)=>s+r.dogru,0)/a.length).toFixed(1):"-"}catch(e){return "-"}})());
+  const bekleyenToplam=tk.data.length+s.data.length;
+  $("spOzet").innerHTML=[   kpiTile("👥","Toplam Personel",aktif.length,`${per.length-aktif.length} pasif`,"mavi",aktif.length?aktif.length/per.length*100:0),
+   kpiTile("🟢","Aralıkta Aktif",aralikKisi,`${aktif.length?Math.round(aralikKisi/aktif.length*100):0}% kadro`,"",aktif.length?aralikKisi/aktif.length*100:0),
+   kpiTile("✅","Bugün Başlayan",basl.size,`vardiya kaydı`,"mint",Math.min(100,basl.size*4)),
+   kpiTile("📥","Görev Kaydı",toplamGorev,`${fb} → ${fe}`,"mor",Math.min(100,toplamGorev)),
+   kpiTile("✖️","Okunmamış Mesaj",okunmamis,`admin bekliyor`,"kirmizi",Math.min(100,okunmamis*10)),
+   kpiTile("⏳","Bekleyen Takas",tk.data.length,`onay bekliyor`,"sari",Math.min(100,tk.data.length*10)),
+   kpiTile("🆘","Acil SOS",s.data.length,`bugün`,"kirmizi",Math.min(100,s.data.length*20)),
+   kpiTile("🎯","Quiz Ort.",ort,`son 60 sınav`,"pembe",parseFloat(ort)*10||0)
+  ].join("");
   try{
    const gunler=[];{const a=new Date(fb+"T12:00:00"),b=new Date(fe+"T12:00:00");for(let d=new Date(a);d<=b;d.setDate(d.getDate()+1))gunler.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"))}
    const sayG={};gl.forEach(r=>{sayG[r.tarih]=(sayG[r.tarih]||0)+1});
    const maks=Math.max(1,...gunler.map(g2=>sayG[g2]||0));
    const q=await sb.from("sinav_sonuc").select("dogru").order("created_at",{ascending:false}).limit(60);
    const ort=(q.data||[]).length?((q.data||[]).reduce((a,r)=>a+r.dogru,0)/(q.data||[]).length).toFixed(1):"-";
-   $("spGrafik").innerHTML=`<div class="bar14">`+gunler.slice(-14).map(g2=>{const v2=sayG[g2]||0;return `<div title="${g2}: ${v2}" style="height:${Math.max(6,Math.round(v2/maks*100))}%"></div>`}).join("")+`</div><p class="hint">${gunler.length} gün • quiz ort: <b>${ort}</b></p>`;
+   const goster=gunler.slice(-14);
+   $("spGrafik").innerHTML=`<div class="bar14">`+goster.map(g2=>{const v2=sayG[g2]||0;return `<div class="${v2?"":"bos"}" title="${g2}: ${v2} görev" style="height:${v2?Math.max(8,Math.round(v2/maks*100)):3}%"></div>`}).join("")+`</div>`;
+   $("spEksen").innerHTML=goster.map(g2=>`<span>${g2.slice(8)}</span>`).join("");
+   $("spGrafikSub").textContent=`${goster[0]} → ${goster[goster.length-1]} • en yoğun ${Math.max(0,...goster.map(x=>sayG[x]||0))} • quiz ort: ${ort}`;
+   const kisSay={};gl.forEach(r=>{kisSay[r.sicil]=(kisSay[r.sicil]||0)+1});
+   const ld=Object.entries(kisSay).sort((a,b)=>b[1]-a[1]).slice(0,8);
+   const ldMax=ld.length?ld[0][1]:1;
+   $("spLider").innerHTML=ld.length?ld.map(([s2,n2],i)=>`<div class="rank ${i<3?"no"+(i+1):""}"><span class="no">${i+1}</span><span class="ad">${ad[s2]||s2} <span class="hint">(${s2})</span></span><span class="rb"><i style="width:${Math.round(n2/ldMax*100)}%"></i></span><span class="sv">${n2}</span></div>`).join(""):'<p class="hint">Bu aralıkta kayıt yok</p>';
    const pasif=aktif.length-aralikKisi;
    const C=2*Math.PI*44,top2=aralikKisi+pasif||1;
    const d1=aralikKisi/top2*C,d2=pasif/top2*C;
@@ -612,27 +749,34 @@ async function spYenile(sessiz){
   if(onceki)sel.value=onceki;
   window._adM=ad;spKisiDetay(ad);
   const ev=[];
-  (s.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:"bugün",t:"🆘 SOS",k:"-"}));
-  (m.data||[]).slice(0,15).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:(r.okundu?"✅":"✖️")+" mesaj → "+r.sicil,k:r.sicil}));
-  gl.slice(0,20).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`📥 ${r.sicil} görev ${r.gorevno}`,k:r.sicil}));
-  try{
-   const sx=await sb.from("sos").select("sicil,created_at").order("created_at",{ascending:false}).limit(10);
-   (sx.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🆘 SOS ${r.sicil}`,k:r.sicil}));
-   const ax=await sb.from("ariza").select("sicil,created_at").order("created_at",{ascending:false}).limit(10);
-   (ax.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🔧 Arıza ${r.sicil}`,k:r.sicil}));
-   const tx=await sb.from("takas").select("isteyen_sicil,created_at").order("created_at",{ascending:false}).limit(10);
-   (tx.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🔄 Takas ${r.isteyen_sicil}`,k:r.isteyen_sicil}));
-  }catch(e){}
-  ev.sort((a,b)=>b.ts-a.ts);
-  $("spZaman").innerHTML=`<table><thead><tr><th>Zaman</th><th>Olay</th></tr></thead><tbody>`+ev.slice(0,25).map(e=>`<tr><td>${e.z}</td><td style="text-align:left">${e.t}</td></tr>`).join("")+`</tbody></table>`;
-  const d=await sb.from("duyurular").select("id,mesaj").order("created_at",{ascending:false}).limit(1);
-  const o=await sb.from("duyuru_okuma").select("duyuru_id,sicil").limit(2000);
-  const t=await sb.from("talimatlar").select("id,baslik").eq("aktif",true).limit(20);
-  const to=await sb.from("talimat_okuma").select("talimat_id,sicil").limit(2000);
-  let oh="";
-  if(d.data&&d.data.length){const okS=new Set(o.data.filter(x=>x.duyuru_id===d.data[0].id).map(x=>x.sicil));const yok=aktif.filter(x=>!okS.has(x.sicil));oh+=`<p class="hint">📢 "${(d.data[0].mesaj||"").slice(0,60)}" — okumayan (${yok.length}): ${yok.slice(0,15).map(x=>x.sicil).join(", ")||"yok ✅"}${yok.length>15?"...":""}</p>`}
-  (t.data||[]).slice(0,5).forEach(x=>{const okS=new Set(to.data.filter(r=>r.talimat_id===x.id).map(r=>r.sicil));const yok=aktif.filter(p2=>!okS.has(p2.sicil));oh+=`<p class="hint">📋 ${x.baslik} — okumayan (${yok.length}): ${yok.slice(0,15).map(p2=>p2.sicil).join(", ")||"yok ✅"}${yok.length>15?"...":""}</p>`});
-  $("spOkuma").innerHTML=oh||'<p class="hint">Veri yok</p>';
+   (s.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:"bugün",t:`🆘 SOS — ${r.sicil||"bilinmiyor"}`,c:"uyari"}));
+   (m.data||[]).slice(0,15).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`${r.okundu?"✅":"✖️"} mesaj — ${r.sicil}`,c:r.okundu?"":"sari"}));
+   gl.slice(0,20).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`📥 ${r.sicil} görev ${r.gorevno} yükledi`,c:"aci"}));
+   try{
+    const sx=await sb.from("sos").select("sicil,created_at").order("created_at",{ascending:false}).limit(10);
+    (sx.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🆘 SOS — ${r.sicil}`,c:"uyari"}));
+    const ax=await sb.from("ariza").select("sicil,created_at").order("created_at",{ascending:false}).limit(10);
+    (ax.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🔧 Arıza — ${r.sicil}`,c:"uyari"}));
+    const tx=await sb.from("takas").select("isteyen_sicil,created_at").order("created_at",{ascending:false}).limit(10);
+    (tx.data||[]).forEach(r=>ev.push({ts:new Date(r.created_at).getTime()||0,z:ydt(r.created_at),t:`🔄 Takas talebi — ${r.isteyen_sicil}`,c:"sari"}));
+   }catch(e){}
+   ev.sort((a,b)=>b.ts-a.ts);
+   $("spZaman").innerHTML=ev.length?ev.slice(0,30).map(e=>`<div class="ev ${e.c||""}"><div class="tm">${e.z}</div><div>${e.t}</div></div>`).join(""):'<p class="hint">Henüz olay yok</p>';
+   const d=await sb.from("duyurular").select("id,mesaj").order("created_at",{ascending:false}).limit(1);
+   const o=await sb.from("duyuru_okuma").select("duyuru_id,sicil").limit(2000);
+   const t=await sb.from("talimatlar").select("id,baslik").eq("aktif",true).limit(20);
+   const to=await sb.from("talimat_okuma").select("talimat_id,sicil").limit(2000);
+   const og=[];
+   if(d.data&&d.data.length){const okS=new Set(o.data.filter(x=>x.duyuru_id===d.data[0].id).map(x=>x.sicil));const yok=aktif.filter(x=>!okS.has(x.sicil));og.push({ad:"📢 "+(d.data[0].mesaj||"").slice(0,50),ok:aktif.length-yok.length,top:aktif.length,yok})}
+   (t.data||[]).slice(0,5).forEach(x=>{const okS=new Set(to.data.filter(r=>r.talimat_id===x.id).map(r=>r.sicil));const yok=aktif.filter(p2=>!okS.has(p2.sicil));og.push({ad:"📋 "+x.baslik,ok:aktif.length-yok.length,top:aktif.length,yok})});
+   let okumaYok=0;
+   $("spOkuma").innerHTML=og.length?og.map(x=>{const y=x.yok.length;okumaYok+=y;const p3=x.top?Math.round(x.ok/x.top*100):0;return `<div class="prog"><div class="ph"><span>${x.ad}</span><span>${p3}% • ${y} kişi okumadı</span></div><div class="pb"><i style="width:${p3}%"></i></div>${y?`<div class="hint" style="margin-top:3px">${x.yok.slice(0,12).map(z=>z.sicil).join(", ")}${y>12?" ...":""}</div>`:""}</div>`}).join(""):'<p class="hint">Veri yok</p>';
+   $("spUyar").innerHTML=[
+    uyariKutu("🆘","Acil Durumlar",s.data.length,"kirmizi"),
+    uyariKutu("⏳","Takas Bekliyor",tk.data.length,"sari"),
+    uyariKutu("✖️","Okunmamış Mesaj",okunmamis,"mavi"),
+    uyariKutu("👁️","Okumayan Kişi",okumaYok,"turuncu")
+   ].join("");
   $("spDurum").textContent="✅ "+new Date().toLocaleTimeString("tr-TR");
   kullaniciListe();
  }catch(e){$("spDurum").textContent="🔴 "+e.message}
@@ -650,9 +794,17 @@ async function kullaniciListe(){
   const byV={};(v.data||[]).forEach(r=>byV[r.sicil]=r.saat);
   const m=await sb.from("mesajlar").select("sicil").eq("okundu",false).limit(300);
   const unm={};(m.data||[]).forEach(r=>unm[r.sicil]=(unm[r.sicil]||0)+1);
-  const aktifler=per.filter(x=>byG[x.sicil]);
-  $("kulDurum").textContent=`${aktifler.length} kişi aktif`;
-  $("kulListe").innerHTML=aktifler.map(x=>{const r=byG[x.sicil];return `<tr><td>${x.sicil}</td><td style="text-align:left">${x.ad}</td><td>Görev ${r.gorevno}</td><td>${byV[x.sicil]?String(byV[x.sicil]).slice(0,5):"—"}</td><td>${unm[x.sicil]||0}</td><td>${ysaat(r.created_at)}</td></tr>`}).join("")||"<tr><td colspan=6>Bugün kimse yok</td></tr>";
+   const aktifler=per.filter(x=>byG[x.sicil]);
+   const toplamUnm=Object.values(unm).reduce((a,b)=>a+b,0);
+   const baslayan=aktifler.filter(x=>byV[x.sicil]).length;
+   $("kulDurum").textContent=`${aktifler.length} kişi aktif • ${T}`;
+   $("kulOzet").innerHTML=[
+    kpiTile("🟢","Aktif Kullanıcı",aktifler.length,`${per.length} kayıtlı`,"",per.length?aktifler.length/per.length*100:0),
+    kpiTile("✅","Vardiya Başlatan",baslayan,`kayıt aldı`,"mint",aktifler.length?baslayan/aktifler.length*100:0),
+    kpiTile("📥","Görev Yükleyen",aktifler.length,`toplam ${(g.data||[]).length} kayıt`,"mor",Math.min(100,(g.data||[]).length)),
+    kpiTile("✖️","Okunmamış Mesaj",toplamUnm,`bekleyen`,"kirmizi",Math.min(100,toplamUnm*10))
+   ].join("");
+   $("kulListe").innerHTML=aktifler.map(x=>{const r=byG[x.sicil];return `<tr><td>${x.sicil}</td><td style="text-align:left">${x.ad}</td><td>Görev ${r.gorevno}</td><td>${byV[x.sicil]?String(byV[x.sicil]).slice(0,5):"—"}</td><td>${unm[x.sicil]?`<span class="pill warn">${unm[x.sicil]}</span>`:`<span class="pill ok">0</span>`}</td><td>${ysaat(r.created_at)}</td></tr>`}).join("")||`<tr><td colspan=6><div class="hint" style="padding:14px">Bu tarihte kimse aktif değil</div></td></tr>`;
  }catch(e){}
 }
 $("spKisi").onchange=()=>spKisiDetay(window._adM);
@@ -912,8 +1064,50 @@ $("ayBtn").onclick=async()=>{
  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=`puantaj_${ay}.csv`;a.click();
  $("ayDurum").textContent=`✅ ${g.data.length} satır indirildi — Excel ile açılır`;
 };
-</script>
+ </script>
 <button id="topBtn" class="ghost">⬆️</button>
-<p class="hint" style="text-align:center;opacity:.6">Admin v2.5 • sekmeli dashboard</p>
+</div></div></div>
+<script>
+// Dashboard bölümleme: kartları başlıklarına göre otomatik sekmelere koyar
+(function(){
+ const SEK=[
+  {id:"s-panel",kisa:"panel",ad:"🕵️ Gösterge Paneli",ri:"📊",bas:"🕵️ Gösterge Paneli"},
+  {id:"s-tarife",kisa:"tarife",ad:"📥 Tarife & Veri",ri:"🗂️",bas:"📥 Tarife & Veri"},
+  {id:"s-iletisim",kisa:"iletisim",ad:"💬 İletişim",ri:"✉️",bas:"💬 İletişim"},
+  {id:"s-kadro",kisa:"kadro",ad:"👥 Kadro",ri:"👤",bas:"👥 Kadro"},
+  {id:"s-icerik",kisa:"icerik",ad:"📚 İçerik",ri:"📚",bas:"📚 İçerik"}
+ ];
+  const icerik=$("icerik");
+  const kartlar=[...document.querySelectorAll(".card")];
+  const HARITA={0:"tarife",1:"tarife",2:"kadro",3:"iletisim",4:"panel",5:"iletisim",6:"tarife",7:"panel",8:"panel",9:"tarife",10:"tarife",11:"iletisim",12:"tarife",13:"tarife",14:"iletisim",15:"icerik",16:"icerik",17:"iletisim",18:"icerik",19:"kadro"};
+  const yer={},kisa={};SEK.forEach(s=>{yer[s.id]=document.createElement("section");kisa[s.kisa]=yer[s.id]});
+  yer["s-panel"].className="sek on";
+  SEK.forEach(s=>{yer[s.id].id=s.id;icerik.appendChild(yer[s.id])});
+  const ip=$("ipucu");if(ip)kisa.tarife.appendChild(ip);
+  const sn2=$("sonuc");if(sn2)kisa.tarife.appendChild(sn2);
+  kartlar.forEach((el,i)=>kisa[HARITA[i]||"panel"].appendChild(el));
+  SEK.forEach(s=>{if(yer[s.id].children.length)yer[s.id].insertAdjacentHTML("afterbegin",`<h1>${s.bas}</h1>`);else yer[s.id].remove()});
+ const menu=$("menu");
+ SEK.forEach((s,i)=>{
+  if(!yer[s.id])return;
+  const b=document.createElement("button");
+  b.innerHTML=`<span class="ri">${s.ri}</span><span>${s.ad}</span><span class="roz" id="roz_${s.kisa}"></span>`;
+  b.onclick=()=>{
+   SEK.forEach((x,j)=>{yer[x.id]&&yer[x.id].classList.toggle("on",x.id===s.id)});
+   [...menu.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");
+   $("sekBaslik").textContent=s.bas;
+   $("yan").classList.remove("acik");
+   window.scrollTo({top:0});
+  };
+  menu.appendChild(b);
+ });
+ menu.children[0]&&menu.children[0].classList.add("on");
+ $("menuBtn").onclick=()=>$("yan").classList.toggle("acik");
+ $("topBtn").onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
+ window.addEventListener("scroll",()=>$("topBtn").classList.toggle("goster",window.scrollY>600),{passive:true});
+ // eski indeks tabanlı rozet çağrılarını yeni ile eşle
+ window._rozKoy=(i,n)=>{const r=$("roz"+i);if(!r)return;if(n>0){r.textContent=n>99?"99+":n;r.classList.add("var")}else r.classList.remove("var")};
+})();
+</script>
 </body>
 </html>

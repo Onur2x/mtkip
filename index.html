@@ -344,12 +344,25 @@ button:active::after{animation:ripple .55s}
 <div class="login-box">
 <div class="logo">🚂</div>
 <h2>M8 Personel Girişi</h2>
-<p>Sicil numaranı gir (şifre = sicil numaran)</p>
+<p id="inAciklama">Sicil numaranı gir (şifre = sicil numaran)</p>
 <input id="inSicil" inputmode="numeric" autocomplete="off" placeholder="Sicil">
 <input id="inSifre" type="password" inputmode="numeric" autocomplete="off" placeholder="Şifre">
 <div class="login-err" id="loginErr"></div>
 <div class="btnrow"><button id="girisBtn">🔑 Giriş</button></div>
 <div class="btnrow"><button id="cevrimdisiBtn" class="ghost">Çevrimdışı Gir</button></div>
+</div>
+</div>
+<div id="sifreModal" class="login-modal">
+<div class="login-box">
+<div class="logo">🔐</div>
+<h2>Şifreni Belirle</h2>
+<p id="sfAciklama">Artık herkesin sicilini bilmesi girmene izin vermeyecek. Kendi şifreni seç.</p>
+<div id="sfKutu">
+<input id="sfYeni" type="password" autocomplete="new-password" placeholder="Yeni şifre (en az 4 karakter)">
+<input id="sfTekrar" type="password" autocomplete="new-password" placeholder="Yeni şifre (tekrar)">
+<div class="login-err" id="sfHata"></div>
+<div class="btnrow"><button id="sfBtn">✓ Şifreyi Kaydet</button></div>
+</div>
 </div>
 </div>
 <div id="msgModal" class="msg-modal">
@@ -472,10 +485,19 @@ $("msgOkudumBtn").onclick=async()=>{
 };
 /* ---- PERSONEL GİRİŞİ + GÜNLÜK KAYIT ---- */
 function loginHata(m){const e=$("loginErr");e.style.display="block";e.textContent=m}
+function sfHata(m){const e=$("sfHata");if(!e)return;e.style.display="block";e.textContent=m}
+function sifreHashla(sicil,sifre){
+ const tuz="mt8|"+sicil+"|"+sifre+"|m8";
+ if(window.crypto&&crypto.subtle&&crypto.subtle.digest){
+  return crypto.subtle.digest("SHA-256",new TextEncoder().encode(tuz)).then(b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""));
+ }
+ let h1=0,h2=5381,i;for(i=0;i<tuz.length;i++){h1=(h1*31+tuz.charCodeAt(i))|0;h2=((h2<<5)+h2)^tuz.charCodeAt(i)}
+ return Promise.resolve("y"+((h1>>>0).toString(16))+((h2>>>0).toString(16))+tuz.length.toString(16));
+}
+let _sifreBekle=null;
 async function girisYap(){
  const sicil=$("inSicil").value.trim(),sifre=$("inSifre").value.trim();
  if(!sicil||!sifre){loginHata("Sicil ve şifre gerekli");return}
- if(sifre!==sicil){loginHata("Şifre sicil numaran olmalı");return}
  const sb=sbClient();
  if(!sb){loginHata("Bağlantı yok — Çevrimdışı Gir'i kullan");return}
  loginHata("");$("girisBtn").textContent="⏳ ...";
@@ -483,10 +505,56 @@ async function girisYap(){
   const {data,error}=await sb.from("personel").select("ad,aktif").eq("sicil",sicil).maybeSingle();
   if(error||!data){loginHata("Sicil bulunamadı");return}
   if(data.aktif===false){loginHata("Hesap pasif");return}
+  let kayit=null,tblHata=false;
+  try{
+   const r=await sb.from("personel_sifre").select("sifre_hash,sifre_degisti").eq("sicil",sicil).maybeSingle();
+   if(r.error)tblHata=true;else kayit=r.data;
+  }catch(e){tblHata=true}
+  if(tblHata){
+   if(sifre!==sicil){loginHata("Şifre = sicil olmalı (ilk giriş)");return}
+   store.personel={sicil,ad:data.ad};persist();
+   $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
+   return;
+  }
+  if(!kayit||!kayit.sifre_degisti){
+   if(sifre!==sicil){loginHata("İlk giriş için şifre = sicil numaran");return}
+   sifreModalAc(sicil,data.ad);
+   return;
+  }
+  const h=await sifreHashla(sicil,sifre);
+  if(h!==kayit.sifre_hash){loginHata("Şifre hatalı");return}
   store.personel={sicil,ad:data.ad};persist();
   $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
  }finally{$("girisBtn").textContent="🔑 Giriş"}
 }
+function sifreModalAc(sicil,ad){
+ _sifreBekle={sicil,ad};
+ $("sfAciklama").textContent=`${ad} (${sicil}) — artık herkes sicilini bilse bile giremez. Kendi şifreni seç.`;
+ $("sfYeni").value="";$("sfTekrar").value="";sfHata("");
+ $("sifreModal").classList.add("acik");
+ setTimeout(()=>$("sfYeni").focus(),80);
+}
+async function sifreKaydet(){
+ const b=_sifreBekle;if(!b)return;
+ const y=$("sfYeni").value,t=$("sfTekrar").value;
+ if(!y||!t){sfHata("Şifreyi iki kez gir");return}
+ if(y.length<4){sfHata("Şifre en az 4 karakter olmalı");return}
+ if(y===b.sicil){sfHata("Şifre sicil numaran olamaz");return}
+ if(y!==t){sfHata("Şifreler eşleşmiyor");return}
+ const sb=sbClient();if(!sb){sfHata("Bağlantı yok");return}
+ const h=await sifreHashla(b.sicil,y);
+ const {error}=await sb.from("personel_sifre").upsert({sicil:b.sicil,sifre_hash:h,sifre_degisti:true,guncellendi:new Date().toISOString()});
+ if(error){sfHata("🔴 "+error.message);return}
+ $("sifreModal").classList.remove("acik");
+ $("inSifre").value="";
+ loginHata("");
+ alert("✅ Şifren kaydedildi. Bundan sonra giriş için kendi şifreni kullan.");
+ store.personel={sicil:b.sicil,ad:b.ad};persist();
+ $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
+}
+$("sfBtn").onclick=sifreKaydet;
+$("sfYeni").onkeydown=e=>{if(e.key==="Enter")$("sfTekrar").focus()};
+$("sfTekrar").onkeydown=e=>{if(e.key==="Enter")sifreKaydet()};
 $("girisBtn").onclick=girisYap;
 $("cevrimdisiBtn").onclick=()=>{const s=$("inSicil").value.trim();if(!s){loginHata("Önce sicil yaz");return}store.personel={sicil:s,ad:"(çevrimdışı)"};persist();$("loginModal").classList.remove("acik")};
 function bugun(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
