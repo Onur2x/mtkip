@@ -350,6 +350,20 @@ button:active::after{animation:ripple .55s}
 <div class="login-err" id="loginErr"></div>
 <div class="btnrow"><button id="girisBtn">🔑 Giriş</button></div>
 <div class="btnrow"><button id="cevrimdisiBtn" class="ghost">Çevrimdışı Gir</button></div>
+<div class="btnrow"><button id="unuttumBtn" class="ghost">🔔 Şifremi Unuttum</button></div>
+</div>
+</div>
+<div id="unuttumModal" class="login-modal">
+<div class="login-box">
+<div class="logo">🆘</div>
+<h2>Şifre Sıfırlama Talebi</h2>
+<p id="unAciklama">Sicilini yaz — yönetime talebin düşsün. Yönetim onaylayınca şifren sıfırlanır ve sicilinle giriş yapıp yeni şifreni belirlersin.</p>
+<input id="unSicil" inputmode="numeric" autocomplete="off" placeholder="Sicil">
+<input id="unNot" autocomplete="off" placeholder="Not (isteğe bağlı: vardiya, bölüm vb.)">
+<div class="login-err" id="unHata"></div>
+<div class="login-err" id="unTamam" style="display:none;background:#052e16;border-color:#22c55e;color:#86efac"></div>
+<div class="btnrow"><button id="unGonderBtn">📨 Talebi Gönder</button></div>
+<div class="btnrow"><button id="unKapatBtn" class="ghost">Kapat</button></div>
 </div>
 </div>
 <div id="sifreModal" class="login-modal">
@@ -551,6 +565,47 @@ async function sifreKaydet(){
  alert("✅ Şifren kaydedildi. Bundan sonra giriş için kendi şifreni kullan.");
  store.personel={sicil:b.sicil,ad:b.ad,sifre_degisti:true};persist();
  $("loginModal").classList.remove("acik");baslamaKontrol();cizelgeGetir();
+}
+$("unKapatBtn").onclick=()=>$("unuttumModal").classList.remove("acik");
+$("unuttumBtn").onclick=()=>{
+ const s=$("inSicil").value.trim();
+ if(s)$("unSicil").value=s;
+ $("unHata").style.display="none";$("unTamam").style.display="none";
+ $("unSicil").value=s;$("unNot").value="";
+ $("unuttumModal").classList.add("acik");
+ setTimeout(()=>$("unSicil").focus(),80);
+};
+$("unGonderBtn").onclick=async()=>{
+ const s=$("unSicil").value.trim(),n=$("unNot").value.trim();
+ const hata=m=>{const e=$("unHata");e.style.display="block";e.textContent=m};
+ const tamam=m=>{const e=$("unTamam");e.style.display="block";e.textContent=m};
+ hata("");tamam("");
+ if(!s){hata("Sicil gerekli");return}
+ const sb=sbClient();
+ if(!sb){hata("Bağlantı yok — talep için internet gerekli");return}
+ const p=await sb.from("personel").select("ad,aktif").eq("sicil",s).maybeSingle();
+ if(p.error||!p.data){hata("Bu sicil kayıtlı değil");return}
+ if(p.data.aktif===false){hata("Bu hesap pasif durumda");return}
+ const {error}=await sb.from("sifre_talep").insert({sicil:s,not_:n||null,durum:"bekliyor"});
+ if(error){hata("🔴 "+error.message);return}
+ $("unGonderBtn").textContent="✅ Gönderildi";
+ $("unSicil").disabled=true;$("unNot").disabled=true;
+ tamam("Talebin alındı. Yönetim onayladığında bildirim göreceksin — tekrar dene.");
+ setTimeout(()=>{$("unGonderBtn").textContent="📨 Talebi Gönder";$("unSicil").disabled=false;$("unNot").disabled=false},2600);
+};
+async function unuttumKontrol(){
+ const sb=sbClient();
+ if(!sb||!store.personel||!store.personel.sicil)return;
+ try{
+  const r=await sb.from("sifre_talep").select("id,sicil,durum").eq("sicil",String(store.personel.sicil)).eq("durum","onaylandi").order("id",{ascending:false}).limit(1);
+  if(r.error||!r.data||!r.data.length)return;
+  const id=r.data[0].id;
+  await sb.from("sifre_talep").update({durum:"gosterildi",sonuc:new Date().toISOString()}).eq("id",id);
+  alert("🔔 Şifre sıfırlama talebin onaylandı.\n\nŞimdi giriş ekranında şifre = sicil ile giriş yapıp yeni şifreni belirleyebilirsin.");
+  store.personel=null;persist();
+  $("inSicil").value=String(r.data[0].sicil);
+  $("loginModal").classList.add("acik");
+ }catch(e){}
 }
 $("sfBtn").onclick=sifreKaydet;
 $("sfYeni").onkeydown=e=>{if(e.key==="Enter")$("sfTekrar").focus()};
@@ -1155,6 +1210,7 @@ if(store.personel)cizelgeGetir();
 baslamaKontrol();
 if(!store.personel)$("loginModal").classList.add("acik");
 otoGirisSifreKontrol();
+unuttumKontrol();setInterval(unuttumKontrol,60000);
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
