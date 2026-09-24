@@ -1,6 +1,6 @@
 /* M8 service worker — kabuk önbelleği (çevrimdışı açılış) + zamanlanmış/yığın bildirimler
    Kabuk değişince VERSIYON'u artır ki telefonlar yeniyi alsın. */
-const VERSIYON='m8-v9';
+const VERSIYON='m8-v10';
 const KABUK=['./','./index.html','./manifest.webmanifest','./supabase-config.js'];
 self.addEventListener('install',e=>{
   self.skipWaiting();

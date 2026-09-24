@@ -311,11 +311,6 @@ $("uretBtn").onclick=async()=>{
  _art.clear();sqlKur();
 };
 $("kopyalaBtn").onclick=()=>{$("sqlTxt").select();document.execCommand("copy");alert("Kopyalandı")};
-try{
- const d=new Date(),p=n=>String(n).padStart(2,"0");
- $("ayIn").value=`${d.getFullYear()}-${p(d.getMonth()+1)}`;
- $("czAy").value=`${d.getFullYear()}-${p(d.getMonth()+1)}`;
-}catch(e){}
 $("indirBtn").onclick=()=>{const g=$("gun").value;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([$("sqlTxt").value],{type:"text/sql"}));a.download=`seed_gun${g}.sql`;a.click()};
 </script>
 <div class="card">
@@ -1027,7 +1022,11 @@ function _trIlkGun(){const d=new Date();const g=(d.getDay()+6)%7;d.setDate(d.get
 try{
  const d=new Date(),p2=n=>String(n).padStart(2,"0");
  const T=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+ const AY=`${d.getFullYear()}-${p2(d.getMonth()+1)}`;
  $("geBas").value=T;$("geBit").value=T;$("vpBas").value=_trIlkGun();
+ if($("ayIn"))$("ayIn").value=AY;
+ if($("czAy"))$("czAy").value=AY;
+ if($("kulTarih")&&!$("kulTarih").value)$("kulTarih").value=T;
 }catch(e){}
 setTimeout(()=>{vardiyaPlan();gecikmeListe()},2500);
 setInterval(()=>{if(!document.body.classList.contains("kilitli"))gecikmeListe()},120000);
