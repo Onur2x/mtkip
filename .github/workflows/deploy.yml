@@ -24,6 +24,7 @@ jobs:
             URL: "${{ secrets.SUPABASE_URL }}",
             ANON_KEY: "${{ secrets.SUPABASE_ANON_KEY }}"
           };
+          window.__SBF__ = "${{ secrets.SUPABASE_URL }}/functions/v1/haftalik-ozet";
           EOF
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
